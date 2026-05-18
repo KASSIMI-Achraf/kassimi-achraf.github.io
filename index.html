@@ -1,0 +1,1873 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>KASSIMI ACHRAF — Poète · Ingénieur</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Bebas+Neue&family=Special+Elite&family=IBM+Plex+Mono:ital,wght@0,300;0,400;1,300;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&display=swap"
+        rel="stylesheet" />
+    <style>
+        :root {
+            --ink: #1a1209;
+            --cream: #f2ead8;
+            --aged: #e8dcc8;
+            --worn: #d4c9ad;
+            --red: #c0392b;
+            --mustard: #c8931a;
+            --charcoal: #2c2416;
+            --fade: #a89880;
+            --film: #0d0d08;
+            --fellenglish: 'IM Fell English', serif;
+            --bebas: 'Bebas Neue', sans-serif;
+            --typewriter: 'Special Elite', cursive;
+            --mono: 'IBM Plex Mono', monospace;
+            --corm: 'Cormorant Garamond', serif;
+        }
+
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        /* GRAIN TEXTURE OVERLAY */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background: var(--film);
+            color: var(--cream);
+            font-family: var(--corm);
+            overflow-x: hidden;
+            overflow-y: auto;
+            cursor: crosshair;
+            min-height: 100vh;
+            padding-top: 44px;
+            padding-bottom: 52px;
+        }
+
+        /* Film grain via SVG filter */
+        #grain-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9998;
+            pointer-events: none;
+            opacity: 0.055;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23g)'/%3E%3C/svg%3E");
+            animation: grainShift .15s steps(2) infinite;
+        }
+
+        @keyframes grainShift {
+            0% {
+                transform: translate(0, 0)
+            }
+
+            50% {
+                transform: translate(-3px, 2px)
+            }
+
+            100% {
+                transform: translate(2px, -3px)
+            }
+        }
+
+        /* VIGNETTE */
+        #vignette {
+            position: fixed;
+            inset: 0;
+            z-index: 9997;
+            pointer-events: none;
+            background: radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(0, 0, 0, .65) 100%);
+        }
+
+        /* SCRATCH LINES */
+        #scratches {
+            position: fixed;
+            inset: 0;
+            z-index: 9996;
+            pointer-events: none;
+            opacity: .06
+        }
+
+        /* ── BOOT / COUNTDOWN ── */
+        #boot {
+            position: fixed;
+            inset: 0;
+            z-index: 9000;
+            background: var(--film);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+            transition: opacity .8s ease;
+        }
+
+        #boot.fade {
+            opacity: 0;
+            pointer-events: none
+        }
+
+        .countdown-frame {
+            width: 120px;
+            height: 120px;
+            border: 3px solid var(--cream);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .countdown-frame::before,
+        .countdown-frame::after {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border: 2px solid var(--cream);
+        }
+
+        .countdown-frame::before {
+            top: -6px;
+            left: -6px
+        }
+
+        .countdown-frame::after {
+            bottom: -6px;
+            right: -6px
+        }
+
+        .countdown-num {
+            font-family: var(--bebas);
+            font-size: 6rem;
+            color: var(--cream);
+            line-height: 1;
+            letter-spacing: -.05em;
+        }
+
+        .boot-label {
+            font-family: var(--typewriter);
+            font-size: .75rem;
+            letter-spacing: .4em;
+            color: var(--fade);
+            text-transform: uppercase;
+        }
+
+        /* ── NAV BAR (film strip top) ── */
+        #filmstrip {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 200;
+            height: 44px;
+            background: var(--ink);
+            border-bottom: 1px solid rgba(242, 234, 216, .08);
+            display: flex;
+            align-items: center;
+            padding: 0 2rem;
+            gap: 0;
+        }
+
+        .film-hole {
+            width: 18px;
+            height: 28px;
+            border: 1px solid rgba(242, 234, 216, .15);
+            margin-right: 6px;
+            flex-shrink: 0
+        }
+
+        .film-sep {
+            flex: 1
+        }
+
+        .film-title {
+            font-family: var(--bebas);
+            font-size: 1.1rem;
+            letter-spacing: .35em;
+            color: var(--cream);
+            opacity: .7;
+        }
+
+        .film-nav {
+            display: flex;
+            gap: 2.5rem;
+            margin-left: 3rem;
+        }
+
+        .film-nav-item {
+            font-family: var(--typewriter);
+            font-size: .65rem;
+            letter-spacing: .25em;
+            color: var(--fade);
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: color .2s;
+            border: none;
+            background: none;
+            padding: .2rem 0;
+            border-bottom: 1px solid transparent;
+        }
+
+        .film-nav-item:hover,
+        .film-nav-item.active {
+            color: var(--cream);
+            border-bottom-color: var(--mustard)
+        }
+
+        /* ── SECTIONS ── */
+        #stage {
+            position: relative;
+        }
+
+        .section {
+            position: relative;
+            padding: 3rem 4rem 2rem;
+            min-height: 80vh;
+            scroll-margin-top: 44px;
+        }
+
+        /* scrollbar styling */
+        .section::-webkit-scrollbar {
+            width: 3px
+        }
+
+        .section::-webkit-scrollbar-track {
+            background: transparent
+        }
+
+        .section::-webkit-scrollbar-thumb {
+            background: var(--fade);
+            opacity: .3
+        }
+
+        /* ── BOTTOM TICKER ── */
+        #ticker-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 200;
+            height: 52px;
+            background: var(--ink);
+            border-top: 1px solid rgba(242, 234, 216, .08);
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .ticker-tape {
+            display: flex;
+            gap: 4rem;
+            white-space: nowrap;
+            animation: tickerScroll 30s linear infinite;
+        }
+
+        @keyframes tickerScroll {
+            from {
+                transform: translateX(0)
+            }
+
+            to {
+                transform: translateX(-50%)
+            }
+        }
+
+        .ticker-item {
+            font-family: var(--typewriter);
+            font-size: .62rem;
+            letter-spacing: .25em;
+            color: var(--fade);
+            text-transform: uppercase;
+        }
+
+        .ticker-item.red {
+            color: var(--red)
+        }
+
+        .ticker-item.gold {
+            color: var(--mustard)
+        }
+
+        .ticker-sep {
+            color: rgba(242, 234, 216, .2);
+            margin: 0 .5rem
+        }
+
+        /* ── HERO SECTION ── */
+        #hero {
+            padding: 0;
+            display: flex
+        }
+
+        .hero-left {
+            flex: 0 0 55%;
+            padding: 4rem 3rem 2rem 4rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border-right: 1px solid rgba(242, 234, 216, .1);
+            position: relative;
+        }
+
+        .hero-left::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 15%;
+            bottom: 15%;
+            width: 1px;
+            background: linear-gradient(to bottom, transparent, var(--mustard), transparent);
+        }
+
+        .hero-right {
+            flex: 1;
+            padding: 4rem 3rem 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .hero-eyebrow {
+            font-family: var(--typewriter);
+            font-size: .65rem;
+            letter-spacing: .35em;
+            color: var(--mustard);
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+        }
+
+        .hero-name {
+            font-family: var(--bebas);
+            font-size: clamp(5rem, 12vw, 10rem);
+            line-height: .88;
+            letter-spacing: .02em;
+            color: var(--cream);
+            margin-bottom: .5rem;
+        }
+
+        .hero-name .slash {
+            color: var(--red)
+        }
+
+        .hero-subtitle {
+            font-family: var(--corm);
+            font-style: italic;
+            font-size: clamp(1.1rem, 2.5vw, 1.7rem);
+            font-weight: 300;
+            color: var(--worn);
+            margin-bottom: 2.5rem;
+            line-height: 1.4;
+        }
+
+        .hero-tagline {
+            font-family: var(--typewriter);
+            font-size: .72rem;
+            line-height: 2;
+            color: var(--fade);
+            letter-spacing: .05em;
+            border-left: 2px solid var(--red);
+            padding-left: 1rem;
+        }
+
+        .hero-tagline em {
+            color: var(--cream);
+            font-style: normal
+        }
+
+        /* polaroid image */
+        .polaroid {
+            width: 220px;
+            background: var(--cream);
+            padding: 12px 12px 36px;
+            box-shadow: 4px 6px 18px rgba(0, 0, 0, .5);
+            transform: rotate(2.5deg);
+            margin: 2rem auto;
+            position: relative;
+        }
+
+        .polaroid img {
+            width: 100%;
+            display: block;
+            filter: sepia(.35) contrast(1.1) brightness(.95)
+        }
+
+        .polaroid-label {
+            position: absolute;
+            bottom: 8px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-family: var(--typewriter);
+            font-size: .62rem;
+            color: var(--ink);
+            letter-spacing: .1em;
+        }
+
+        .hero-meta-block {
+            font-family: var(--mono);
+            font-size: .62rem;
+            color: var(--fade);
+            line-height: 2.2;
+            margin-top: 1rem;
+        }
+
+        .hero-meta-block .bullet {
+            color: var(--mustard);
+            margin-right: .5rem
+        }
+
+        /* ── SECTION LABEL ── */
+        .section-header {
+            display: flex;
+            align-items: baseline;
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(242, 234, 216, .1);
+        }
+
+        .section-num {
+            font-family: var(--bebas);
+            font-size: 4rem;
+            line-height: 1;
+            color: rgba(242, 234, 216, .08);
+            letter-spacing: .05em;
+        }
+
+        .section-title-block {}
+
+        .section-title {
+            font-family: var(--bebas);
+            font-size: 2rem;
+            letter-spacing: .15em;
+            color: var(--cream);
+        }
+
+        .section-sub {
+            font-family: var(--typewriter);
+            font-size: .6rem;
+            letter-spacing: .3em;
+            color: var(--fade);
+            text-transform: uppercase;
+        }
+
+        /* ── PROJECTS ── */
+        #projects .section-inner {
+            max-width: 1100px;
+            margin: 0 auto
+        }
+
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            background: rgba(242, 234, 216, .06)
+        }
+
+        @media(max-width:900px) {
+            .projects-grid {
+                grid-template-columns: repeat(2, 1fr)
+            }
+        }
+
+        @media(max-width:600px) {
+            .projects-grid {
+                grid-template-columns: 1fr
+            }
+        }
+
+        .proj-cell {
+            background: var(--film);
+            padding: 2rem 1.8rem;
+            cursor: pointer;
+            transition: background .2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .proj-cell:hover {
+            background: rgba(26, 18, 9, .7)
+        }
+
+        .proj-cell:hover .proj-code {
+            transform: translateY(0);
+            opacity: 1
+        }
+
+        .proj-num {
+            font-family: var(--bebas);
+            font-size: 3.5rem;
+            color: rgba(242, 234, 216, .06);
+            position: absolute;
+            top: .5rem;
+            right: 1rem;
+            line-height: 1;
+        }
+
+        .proj-tag {
+            font-family: var(--typewriter);
+            font-size: .58rem;
+            letter-spacing: .25em;
+            color: var(--mustard);
+            margin-bottom: .6rem;
+            text-transform: uppercase;
+        }
+
+        .proj-name {
+            font-family: var(--bebas);
+            font-size: 1.5rem;
+            letter-spacing: .1em;
+            color: var(--cream);
+            line-height: 1.1;
+            margin-bottom: .8rem;
+        }
+
+        .proj-desc {
+            font-family: var(--corm);
+            font-size: .8rem;
+            line-height: 1.9;
+            color: var(--worn);
+            margin-bottom: 1rem;
+        }
+
+        .proj-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .3rem
+        }
+
+        .proj-chip {
+            font-family: var(--mono);
+            font-size: .5rem;
+            letter-spacing: .1em;
+            color: var(--mustard);
+            border: 1px solid rgba(200, 147, 26, .25);
+            padding: .1rem .4rem;
+        }
+
+        .proj-award {
+            font-family: var(--typewriter);
+            font-size: .56rem;
+            letter-spacing: .12em;
+            color: var(--red);
+            margin-top: .8rem;
+            padding-top: .7rem;
+            border-top: 1px solid rgba(192, 57, 43, .2);
+        }
+
+        .proj-code {
+            position: absolute;
+            inset: 0;
+            background: rgba(13, 13, 8, .95);
+            padding: 1.5rem;
+            font-family: var(--mono);
+            font-size: .58rem;
+            line-height: 1.9;
+            color: #7ec8e3;
+            transform: translateY(100%);
+            opacity: 0;
+            transition: transform .4s cubic-bezier(.16, 1, .3, 1), opacity .3s;
+            overflow: auto;
+        }
+
+        .ck {
+            color: #00f0ff
+        }
+
+        .cs {
+            color: #c8931a
+        }
+
+        .cc {
+            color: rgba(120, 140, 160, .5)
+        }
+
+        .cf {
+            color: #e5c07b
+        }
+
+        /* ── POEMS ── */
+        #poemes .section-inner {
+            max-width: 900px;
+            margin: 0 auto
+        }
+
+        .poems-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem
+        }
+
+        @media(max-width:700px) {
+            .poems-layout {
+                grid-template-columns: 1fr
+            }
+        }
+
+        .poem-entry {
+            position: relative;
+            padding: 2rem;
+            border: 1px solid rgba(242, 234, 216, .08);
+            background: rgba(26, 18, 9, .3);
+            cursor: pointer;
+            transition: border-color .3s;
+        }
+
+        .poem-entry:hover {
+            border-color: rgba(200, 147, 26, .35)
+        }
+
+        .poem-entry::before {
+            content: attr(data-num);
+            position: absolute;
+            top: -1.2rem;
+            left: 1rem;
+            font-family: var(--bebas);
+            font-size: 2rem;
+            letter-spacing: .1em;
+            color: var(--red);
+        }
+
+        .poem-lang {
+            font-family: var(--typewriter);
+            font-size: .55rem;
+            letter-spacing: .3em;
+            color: var(--fade);
+            text-transform: uppercase;
+            margin-bottom: .8rem;
+        }
+
+        .poem-title {
+            font-family: var(--bebas);
+            font-size: 1.6rem;
+            letter-spacing: .1em;
+            color: var(--cream);
+            margin-bottom: 1rem;
+            line-height: 1;
+        }
+
+        .poem-body {
+            font-family: var(--corm);
+            font-style: italic;
+            font-size: .9rem;
+            line-height: 2.3;
+            color: var(--worn);
+            white-space: pre-line;
+        }
+
+        .poem-body .arabic {
+            direction: rtl;
+            font-family: var(--corm);
+            font-size: 1.05rem;
+            line-height: 2.5;
+            text-align: right;
+            font-style: normal;
+        }
+
+        .poem-signature {
+            margin-top: 1.2rem;
+            font-family: var(--typewriter);
+            font-size: .58rem;
+            letter-spacing: .2em;
+            color: var(--mustard);
+            text-align: right;
+        }
+
+        /* ── PHOTOS ── */
+        #photos .section-inner {
+            max-width: 1000px;
+            margin: 0 auto
+        }
+
+        .photos-wall {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2.5rem;
+            padding-bottom: 2rem;
+        }
+
+        @media(max-width:700px) {
+            .photos-wall {
+                grid-template-columns: repeat(2, 1fr)
+            }
+        }
+
+        .photo-frame {
+            background: var(--cream);
+            padding: 10px 10px 40px;
+            box-shadow: 3px 5px 16px rgba(0, 0, 0, .6);
+            cursor: pointer;
+            transition: transform .3s, box-shadow .3s;
+            position: relative;
+        }
+
+        .photo-frame:nth-child(odd) {
+            transform: rotate(-1.5deg)
+        }
+
+        .photo-frame:nth-child(even) {
+            transform: rotate(1.2deg)
+        }
+
+        .photo-frame:hover {
+            transform: rotate(0deg) scale(1.04);
+            box-shadow: 6px 10px 28px rgba(0, 0, 0, .7);
+            z-index: 10
+        }
+
+        .photo-frame img {
+            width: 100%;
+            display: block;
+            filter: sepia(.4) contrast(1.05) brightness(.92) grayscale(.15);
+        }
+
+        .photo-placeholder {
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: var(--charcoal);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: .5rem;
+        }
+
+        .photo-placeholder-icon {
+            font-size: 2rem;
+            opacity: .3
+        }
+
+        .photo-placeholder-text {
+            font-family: var(--typewriter);
+            font-size: .55rem;
+            letter-spacing: .2em;
+            color: var(--fade);
+            text-transform: uppercase;
+        }
+
+        .photo-caption {
+            position: absolute;
+            bottom: 8px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-family: var(--typewriter);
+            font-size: .58rem;
+            letter-spacing: .08em;
+            color: var(--ink);
+        }
+
+        .photo-date {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            font-family: var(--typewriter);
+            font-size: .5rem;
+            letter-spacing: .08em;
+            color: rgba(26, 18, 9, .4);
+        }
+
+        .photo-add-btn {
+            border: 2px dashed rgba(242, 234, 216, .15);
+            background: transparent;
+            padding: 10px 10px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: border-color .2s;
+            aspect-ratio: unset;
+            min-height: 180px;
+        }
+
+        .photo-add-btn:hover {
+            border-color: rgba(200, 147, 26, .4)
+        }
+
+        .photo-add-inner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: .6rem;
+            font-family: var(--typewriter);
+            font-size: .6rem;
+            letter-spacing: .25em;
+            color: var(--fade);
+            text-transform: uppercase;
+        }
+
+        .photo-add-plus {
+            font-size: 2rem;
+            color: var(--fade);
+            line-height: 1
+        }
+
+        /* ── THOUGHTS ── */
+        #pensees .section-inner {
+            max-width: 860px;
+            margin: 0 auto
+        }
+
+        .thoughts-feed {
+            display: flex;
+            flex-direction: column;
+            gap: 0
+        }
+
+        .thought-entry {
+            display: flex;
+            gap: 2rem;
+            padding: 2rem 0;
+            border-bottom: 1px solid rgba(242, 234, 216, .06);
+            cursor: pointer;
+            transition: background .2s;
+        }
+
+        .thought-entry:hover {
+            background: rgba(200, 147, 26, .03)
+        }
+
+        .thought-date {
+            flex: 0 0 80px;
+            font-family: var(--typewriter);
+            font-size: .58rem;
+            letter-spacing: .1em;
+            color: var(--fade);
+            line-height: 1.8;
+            text-align: right;
+            padding-top: .2rem;
+        }
+
+        .thought-content {
+            flex: 1
+        }
+
+        .thought-lang-badge {
+            display: inline-block;
+            font-family: var(--typewriter);
+            font-size: .48rem;
+            letter-spacing: .2em;
+            color: var(--mustard);
+            border: 1px solid rgba(200, 147, 26, .3);
+            padding: .05rem .35rem;
+            margin-bottom: .5rem;
+            text-transform: uppercase;
+        }
+
+        .thought-text {
+            font-family: var(--corm);
+            font-size: 1rem;
+            line-height: 2;
+            color: var(--cream);
+        }
+
+        .thought-text.arabic {
+            direction: rtl;
+            font-size: 1.1rem;
+            line-height: 2.5;
+            text-align: right;
+        }
+
+        .thought-text em {
+            color: var(--mustard);
+            font-style: italic
+        }
+
+        .thought-text strong {
+            color: var(--cream);
+            font-weight: 600
+        }
+
+        .thought-tag {
+            display: inline-block;
+            margin-top: .6rem;
+            font-family: var(--typewriter);
+            font-size: .5rem;
+            letter-spacing: .2em;
+            color: var(--fade);
+            text-transform: uppercase;
+        }
+
+        .thought-tag::before {
+            content: '#';
+            color: var(--red);
+            margin-right: .2rem
+        }
+
+        /* ── ABOUT ── */
+        #about .section-inner {
+            max-width: 900px;
+            margin: 0 auto
+        }
+
+        .about-cols {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem
+        }
+
+        @media(max-width:700px) {
+            .about-cols {
+                grid-template-columns: 1fr
+            }
+        }
+
+        .about-portrait {
+            background: var(--cream);
+            padding: 14px 14px 50px;
+            box-shadow: 5px 8px 24px rgba(0, 0, 0, .5);
+            transform: rotate(-1.8deg);
+            margin-bottom: 1.5rem;
+        }
+
+        .about-portrait img {
+            width: 100%;
+            display: block;
+            filter: sepia(.45) contrast(1.1) brightness(.9)
+        }
+
+        .about-portrait-ph {
+            width: 100%;
+            aspect-ratio: 3/4;
+            background: var(--charcoal);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: .6rem;
+        }
+
+        .about-portrait-ph-text {
+            font-family: var(--typewriter);
+            font-size: .55rem;
+            letter-spacing: .2em;
+            color: var(--fade);
+            text-transform: uppercase
+        }
+
+        .about-portrait-caption {
+            text-align: center;
+            margin-top: .5rem;
+            font-family: var(--typewriter);
+            font-size: .6rem;
+            letter-spacing: .1em;
+            color: var(--ink);
+        }
+
+        .about-bio-text {
+            font-family: var(--corm);
+            font-size: .9rem;
+            line-height: 2.2;
+            color: var(--worn);
+            margin-bottom: 1.5rem;
+        }
+
+        .about-bio-text em {
+            color: var(--mustard);
+            font-style: italic
+        }
+
+        .about-bio-text strong {
+            color: var(--cream);
+            font-weight: 600
+        }
+
+        .about-quote {
+            border-left: 3px solid var(--red);
+            padding: .8rem 1.2rem;
+            font-family: var(--corm);
+            font-style: italic;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: var(--cream);
+            margin: 2rem 0;
+        }
+
+        .skill-bar-group {
+            margin-bottom: 2rem
+        }
+
+        .skill-group-label {
+            font-family: var(--typewriter);
+            font-size: .58rem;
+            letter-spacing: .3em;
+            color: var(--mustard);
+            text-transform: uppercase;
+            margin-bottom: .8rem;
+        }
+
+        .skill-row {
+            display: flex;
+            align-items: center;
+            gap: .8rem;
+            margin-bottom: .5rem
+        }
+
+        .skill-name {
+            font-family: var(--mono);
+            font-size: .6rem;
+            color: var(--worn);
+            width: 120px;
+            flex-shrink: 0;
+        }
+
+        .skill-track {
+            flex: 1;
+            height: 2px;
+            background: rgba(242, 234, 216, .07);
+            position: relative;
+            overflow: hidden
+        }
+
+        .skill-fill {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            background: var(--cream);
+            width: 0;
+            transition: width 1.4s cubic-bezier(.16, 1, .3, 1);
+        }
+
+        .skill-fill.gold {
+            background: var(--mustard)
+        }
+
+        .skill-fill.active {
+            width: var(--pct)
+        }
+
+        .edu-line {
+            font-family: var(--mono);
+            font-size: .6rem;
+            color: var(--worn);
+            padding: .4rem 0;
+            border-bottom: 1px solid rgba(242, 234, 216, .05);
+            line-height: 1.9;
+        }
+
+        .edu-line span {
+            color: var(--mustard)
+        }
+
+        /* ── CONTACT ── */
+        #contact .section-inner {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+            padding: 2rem 0
+        }
+
+        .contact-big {
+            font-family: var(--bebas);
+            font-size: clamp(4rem, 10vw, 8rem);
+            letter-spacing: .04em;
+            line-height: .88;
+            color: var(--cream);
+            margin-bottom: 3rem;
+        }
+
+        .contact-big .red {
+            color: var(--red)
+        }
+
+        .contact-cells {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            background: rgba(242, 234, 216, .06);
+            border: 1px solid rgba(242, 234, 216, .06);
+            margin-bottom: 1px;
+        }
+
+        @media(max-width:600px) {
+            .contact-cells {
+                grid-template-columns: 1fr
+            }
+        }
+
+        .contact-cell {
+            background: rgba(13, 13, 8, .9);
+            padding: 1.8rem 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: .5rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background .2s;
+            color: inherit;
+        }
+
+        .contact-cell:hover {
+            background: rgba(200, 147, 26, .06)
+        }
+
+        .contact-cell-icon {
+            font-family: var(--bebas);
+            font-size: 1.5rem;
+            letter-spacing: .1em;
+            color: var(--mustard);
+        }
+
+        .contact-cell-label {
+            font-family: var(--typewriter);
+            font-size: .55rem;
+            letter-spacing: .3em;
+            color: var(--fade);
+            text-transform: uppercase;
+        }
+
+        .contact-cell-val {
+            font-family: var(--mono);
+            font-size: .62rem;
+            color: var(--worn)
+        }
+
+        .contact-philosophy {
+            font-family: var(--corm);
+            font-style: italic;
+            font-size: 1rem;
+            color: var(--worn);
+            max-width: 460px;
+            line-height: 2;
+            margin: 2.5rem auto 0;
+        }
+
+        /* ── LIGHTBOX ── */
+        #lightbox {
+            position: fixed;
+            inset: 0;
+            z-index: 5000;
+            background: rgba(0, 0, 0, .92);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .3s;
+        }
+
+        #lightbox.open {
+            opacity: 1;
+            pointer-events: all
+        }
+
+        #lightbox img,
+        #lightbox .lb-content {
+            max-width: 90vw;
+            max-height: 85vh;
+            object-fit: contain;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .8);
+            filter: sepia(.3) contrast(1.1);
+        }
+
+        .lb-close {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            font-family: var(--typewriter);
+            font-size: .7rem;
+            letter-spacing: .2em;
+            color: var(--fade);
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+        .lb-close:hover {
+            color: var(--red)
+        }
+
+        /* ── SCAN LINE ── */
+        #scanlines {
+            position: fixed;
+            inset: 0;
+            z-index: 9995;
+            pointer-events: none;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, .03) 2px, rgba(0, 0, 0, .03) 4px);
+        }
+
+        /* upload hint */
+        .upload-hint {
+            background: rgba(26, 18, 9, .7);
+            border: 1px dashed rgba(242, 234, 216, .12);
+            padding: .6rem 1rem;
+            font-family: var(--typewriter);
+            font-size: .58rem;
+            letter-spacing: .2em;
+            color: var(--fade);
+            text-align: center;
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="grain-overlay"></div>
+    <div id="vignette"></div>
+    <div id="scanlines"></div>
+
+    <!-- SCRATCH LINES SVG -->
+    <svg id="scratches" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <line x1="23" y1="0" x2="22.5" y2="100" stroke="white" stroke-width=".08" />
+        <line x1="61" y1="0" x2="62" y2="100" stroke="white" stroke-width=".05" />
+        <line x1="78" y1="0" x2="77.5" y2="100" stroke="white" stroke-width=".04" />
+        <line x1="41" y1="0" x2="40.8" y2="100" stroke="white" stroke-width=".03" />
+    </svg>
+
+    <!-- ── BOOT COUNTDOWN ── -->
+    <div id="boot">
+        <div class="boot-label">Une cinémathèque du code &amp; du vers</div>
+        <div class="countdown-frame">
+            <div class="countdown-num" id="countdown-num">3</div>
+        </div>
+        <div class="boot-label">KASSIMI ACHRAF — MCMLXXXIV</div>
+    </div>
+
+    <!-- ── FILMSTRIP NAV ── -->
+    <div id="filmstrip">
+        <div class="film-hole"></div>
+        <div class="film-hole"></div>
+        <div class="film-hole"></div>
+        <div class="film-sep"></div>
+        <div class="film-title">KASSIMI · ACHRAF</div>
+        <nav class="film-nav">
+            <button class="film-nav-item active" onclick="goTo('hero')">ACCUEIL</button>
+            <button class="film-nav-item" onclick="goTo('projects')">PROJETS</button>
+            <button class="film-nav-item" onclick="goTo('poemes')">POÈMES</button>
+            <button class="film-nav-item" onclick="goTo('photos')">PHOTOS</button>
+            <button class="film-nav-item" onclick="goTo('pensees')">PENSÉES</button>
+            <button class="film-nav-item" onclick="goTo('about')">À PROPOS</button>
+            <button class="film-nav-item" onclick="goTo('contact')">CONTACT</button>
+        </nav>
+        <div class="film-sep"></div>
+        <div class="film-hole"></div>
+        <div class="film-hole"></div>
+        <div class="film-hole"></div>
+    </div>
+
+    <!-- ── STAGE ── -->
+    <div id="stage">
+
+        <!-- HERO -->
+        <section id="hero" class="section">
+            <div class="hero-left">
+                <div class="hero-eyebrow">// ENSAM MEKNÈS · INGÉNIEUR IA · POÈTE</div>
+                <h1 class="hero-name">KAS<span class="slash">/</span><br>SIMI<br>ACHRAF</h1>
+                <div class="hero-subtitle">Le poète dans la machine —<br><em>où le silicium rêve en vers</em></div>
+                <div class="hero-tagline">
+                    <em>Meta-Reinforcement Learning</em><br>
+                    <em>Generative AI &amp; RAG Pipelines</em><br>
+                    <em>Computer Vision</em> pour systèmes industriels<br>
+                    et aussi : <em>la poésie</em>
+                </div>
+            </div>
+            <div class="hero-right">
+                <div class="polaroid">
+                    <img src="me.jpeg" alt="KASSIMI Achraf — Portrait" />
+                    <div class="polaroid-label">Meknès, Maroc · 2024</div>
+                </div>
+                <div class="hero-meta-block">
+                    <span class="bullet">▸</span>Finalist — Inno'vam 2024<br>
+                    <span class="bullet">▸</span>MPSI/MP → IA Engineering<br>
+                    <span class="bullet">▸</span>Meknès, Maroc<br>
+                    <span class="bullet" style="color:var(--red)">▸</span>Open to internship &amp; research
+                </div>
+            </div>
+        </section>
+
+        <!-- PROJETS -->
+        <section id="projects" class="section">
+            <div class="section-inner">
+                <div class="section-header">
+                    <div class="section-num">02</div>
+                    <div class="section-title-block">
+                        <div class="section-title">PROJETS</div>
+                        <div class="section-sub">// AI Project Vault — survolez pour révéler le code</div>
+                    </div>
+                </div>
+                <div class="projects-grid">
+                    <div class="proj-cell">
+                        <div class="proj-num">01</div>
+                        <div class="proj-code">
+                            <span class="cc"># SIANA — Railway Inspection</span><br>
+                            <span class="ck">from</span> ultralytics <span class="ck">import</span> YOLO<br>
+                            <span class="ck">class</span> <span class="cf">RailwayInspector</span>:<br>
+                            &nbsp;&nbsp;<span class="ck">def</span> <span class="cf">detect</span>(self, frame):<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;results = self.model(frame)<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<span class="ck">return</span> results.pandas()<br><br>
+                            <span class="cc"># Precision: 94.2% @ IoU=0.5</span>
+                        </div>
+                        <div class="proj-tag">Computer Vision</div>
+                        <div class="proj-name">SIANA Railway<br>Inspection Robot</div>
+                        <div class="proj-desc">Robot d'inspection autonome avec détection de défauts en temps réel via
+                            YOLO. Identifie fissures, boulons manquants, déformations.</div>
+                        <div class="proj-chips"><span class="proj-chip">YOLO v8</span><span
+                                class="proj-chip">OpenCV</span><span class="proj-chip">ROS 2</span><span
+                                class="proj-chip">PyTorch</span></div>
+                        <div class="proj-award">★ FINALIST — INNO'VAM 2024</div>
+                    </div>
+                    <div class="proj-cell">
+                        <div class="proj-num">02</div>
+                        <div class="proj-code">
+                            <span class="cc"># FMEA GenAI — RAG Engine</span><br>
+                            <span class="ck">from</span> langchain.chains <span class="ck">import</span> RetrievalQA<br>
+                            <span class="ck">from</span> langchain.vectorstores <span class="ck">import</span>
+                            FAISS<br><br>
+                            <span class="ck">class</span> <span class="cf">FMEAAssistant</span>:<br>
+                            &nbsp;&nbsp;<span class="ck">def</span> <span class="cf">analyze</span>(self,
+                            component):<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<span class="ck">return</span> self.chain(component)<br><br>
+                            <span class="cc"># LangChain + FAISS + GPT-4</span>
+                        </div>
+                        <div class="proj-tag">Generative AI · RAG</div>
+                        <div class="proj-name">FMEA GenAI<br>Risk Analyzer</div>
+                        <div class="proj-desc">Analyse des modes de défaillance LLM-powered avec RAG. Ingère la
+                            documentation industrielle pour détecter les risques.</div>
+                        <div class="proj-chips"><span class="proj-chip">LangChain</span><span
+                                class="proj-chip">FAISS</span><span class="proj-chip">GPT-4</span><span
+                                class="proj-chip">RAG</span></div>
+                    </div>
+                    <div class="proj-cell">
+                        <div class="proj-num">03</div>
+                        <div class="proj-code">
+                            <span class="cc"># Meta-RL (MAML) — TextWorld</span><br>
+                            <span class="ck">from</span> higher <span class="ck">import</span> innerloop_ctx<br><br>
+                            <span class="ck">for</span> task <span class="ck">in</span> task_dist.sample(K):<br>
+                            &nbsp;&nbsp;with innerloop_ctx(model) as fmodel:<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;inner_loss = fmodel(task)<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;inner_loss.backward()<br>
+                            meta_optimizer.step()<br><br>
+                            <span class="cc"># Learn to learn. 5 grad steps.</span>
+                        </div>
+                        <div class="proj-tag">Meta-Reinforcement Learning</div>
+                        <div class="proj-name">Meta-RL<br>on TextWorld</div>
+                        <div class="proj-desc">Agent MAML pour adaptation rapide sur jeux textuels. Apprend la géométrie
+                            de l'apprentissage lui-même — 5 étapes.</div>
+                        <div class="proj-chips"><span class="proj-chip">MAML</span><span
+                                class="proj-chip">TextWorld</span><span class="proj-chip">PyTorch</span><span
+                                class="proj-chip">RL</span></div>
+                    </div>
+                    <div class="proj-cell">
+                        <div class="proj-num">04</div>
+                        <div class="proj-code">
+                            <span class="cs">@RestController</span><br>
+                            <span class="cs">@RequestMapping</span>(<span class="cs">"/api/courses"</span>)<br>
+                            <span class="ck">public class</span> <span class="cf">CourseController</span> {<br>
+                            &nbsp;&nbsp;<span class="cs">@PostMapping</span>(<span class="cs">"/enroll"</span>)<br>
+                            &nbsp;&nbsp;<span class="ck">public</span> ResponseEntity enroll(<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<span class="cs">@RequestBody</span> EnrollDTO dto) {<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<span class="ck">return</span> service.enroll(dto);<br>
+                            &nbsp;&nbsp;}}<span class="cc">// JWT + PostgreSQL</span>
+                        </div>
+                        <div class="proj-tag">Full-Stack · Java</div>
+                        <div class="proj-name">Spring Boot<br>LMS Platform</div>
+                        <div class="proj-desc">Système complet de gestion de l'apprentissage. REST API, JWT, gestion de
+                            cours, suivi de progression.</div>
+                        <div class="proj-chips"><span class="proj-chip">Spring Boot</span><span
+                                class="proj-chip">React</span><span class="proj-chip">PostgreSQL</span><span
+                                class="proj-chip">JWT</span></div>
+                    </div>
+                    <div class="proj-cell">
+                        <div class="proj-num">05</div>
+                        <div class="proj-code">
+                            <span class="ck">import</span> mediapipe <span class="ck">as</span> mp<br><br>
+                            <span class="ck">def</span> <span class="cf">analyze_squat</span>(landmarks):<br>
+                            &nbsp;&nbsp;hip = landmarks[mp.solutions.<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;pose.PoseLandmark.LEFT_HIP]<br>
+                            &nbsp;&nbsp;knee = get_knee(landmarks)<br>
+                            &nbsp;&nbsp;angle = compute_angle(hip, knee)<br>
+                            &nbsp;&nbsp;<span class="ck">return</span> grade_form(angle)<br><br>
+                            <span class="cc"># Real-time rep counting + form</span>
+                        </div>
+                        <div class="proj-tag">Computer Vision · Fitness AI</div>
+                        <div class="proj-name">AI FitTracker<br>Pose Detection</div>
+                        <div class="proj-desc">Analyse de posture en temps réel via MediaPipe. Compte les répétitions,
+                            évalue la forme, donne un retour correctif.</div>
+                        <div class="proj-chips"><span class="proj-chip">MediaPipe</span><span
+                                class="proj-chip">OpenCV</span><span class="proj-chip">Python</span></div>
+                    </div>
+                    <div class="proj-cell">
+                        <div class="proj-num">06</div>
+                        <div class="proj-code">
+                            <span class="ck">from</span> sklearn.pipeline <span class="ck">import</span>
+                            Pipeline<br><br>
+                            pipe = Pipeline([<br>
+                            &nbsp;&nbsp;(<span class="cs">'preprocess'</span>, ColumnTransformer()),<br>
+                            &nbsp;&nbsp;(<span class="cs">'feat_eng'</span>, FeatureUnion()),<br>
+                            &nbsp;&nbsp;(<span class="cs">'model'</span>, GradientBoosting())<br>
+                            ])<br>
+                            pipe.fit(X_train, y_train)<br>
+                            <span class="cc"># Kaggle silver + EDA mastery</span>
+                        </div>
+                        <div class="proj-tag">Data Science · ML</div>
+                        <div class="proj-name">Data Science<br>Stage &amp; Research</div>
+                        <div class="proj-desc">Pipelines ML end-to-end sur datasets industriels réels. EDA, feature
+                            engineering, modélisation prédictive.</div>
+                        <div class="proj-chips"><span class="proj-chip">scikit-learn</span><span
+                                class="proj-chip">Pandas</span><span class="proj-chip">XGBoost</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- POÈMES -->
+        <section id="poemes" class="section">
+            <div class="section-inner">
+                <div class="section-header">
+                    <div class="section-num">03</div>
+                    <div class="section-title-block">
+                        <div class="section-title">POÈMES</div>
+                        <div class="section-sub">// Scripts — Arabic · Français · English</div>
+                    </div>
+                </div>
+                <div class="poems-layout">
+
+                    <div class="poem-entry" data-num="I">
+                        <div class="poem-lang">English</div>
+                        <div class="poem-title">THE PASSENGER LEAN</div>
+                        <div class="poem-body">I watched the world from the passenger seat
+saw a majestic mountain, I thought wouldn't it be pretty neat
+to give that climb a try
+perhaps I'll find more than nickels and dimes before I die
+
+I looked to my left, to the man on the wheel,
+"hey take us there, let us look for something real,
+ it'll be a hell of a ride"
+"alright". he replied
+
+we faced the mountain, massive and jagged
+and as we drew closer, the driver begged
+"it'll cost too much fuel, every drop to get that high"
+he pointed to a road that dipped and curled and he said "I mean.. why?"
+
+"look at this decline, it's too sweet to miss
+we won't even have to touch the gas, isn't it a bliss?"
+I didn't say yes.. but I leaned to the side.
+and down we went on that ride.
+
+the speed was high, and it was indeed full of joy
+but soon enough it became dull before my eyes
+we stopped in a graveyard of waste and failed tries
+
+nothing but garbage and leftovers near,
+I stepped out and asked, "why are we here?"
+I spotted a man standing amidst the debris,
+looking devastated, staring at me.
+
+he said "who's we? only you were in the car!"</div>
+                        <div class="poem-signature">— K.A.</div>
+                    </div>
+
+                    <div class="poem-entry" data-num="II">
+                        <div class="poem-lang">English</div>
+                        <div class="poem-title">NOT ME, HOPEFULLY</div>
+                        <div class="poem-body">I met him in a room untouched for years.
+Nothing flourishes there but darkness and haunting fears.
+
+I got close and burned a flame,
+Saw a tormented creature, filled with shame.
+I gave him a look of disgrace: "What's your name?"
+
+He responded, "I am what you hide... I am what you deny.
+You're not afraid of failures, you're afraid of eyes!
+You've been running forever, but we're destined to meet,
+So take that chair... have a seat."
+
+You aim high, then you choose the passenger lean.
+Waiting for life to happen, forgetting your hands are on the wheel
+Watching the days pass by like a scroll on a screen
+Until you find yourself strangled by a dream-like scream.
+
+You try to chase feelings, hoping they'll help you breathe,
+Ignoring the way to healing, inhaling only smoke.
+
+You go down in this addiction spiral, and soon enough we meet,
+But this time you took a flame and gave a look at me.
+
+I am the one who doesn't want to be here, and we need we to leave,
+Before comes a time
+Where our breath will expire.</div>
+                        <div class="poem-signature">— K.A.</div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- PHOTOS -->
+        <section id="photos" class="section">
+            <div class="section-inner">
+                <div class="section-header">
+                    <div class="section-num">04</div>
+                    <div class="section-title-block">
+                        <div class="section-title">GALERIE</div>
+                        <div class="section-sub">// Instantanés — Meknès · Lab · Ailleurs</div>
+                    </div>
+                </div>
+                <div class="photos-wall">
+
+                    <div class="photo-frame" onclick="openLightbox(this)">
+                        <img src="photoo1.jpeg" alt="Nuit marocaine — palmiers et ciel" />
+                        <div class="photo-date">2024</div>
+                        <div class="photo-caption">Nuit marocaine</div>
+                    </div>
+
+                    <div class="photo-frame" onclick="openLightbox(this)">
+                        <img src="p2.jpeg" alt="Coucher de soleil — Meknès" />
+                        <div class="photo-date">2024</div>
+                        <div class="photo-caption">Coucher de soleil — Meknès</div>
+                    </div>
+
+                    <div class="photo-frame" onclick="openLightbox(this)">
+                        <img src="p3.jpeg" alt="Neige nocturne" />
+                        <div class="photo-date">2024</div>
+                        <div class="photo-caption">Neige nocturne</div>
+                    </div>
+
+                    <div class="photo-frame" onclick="openLightbox(this)">
+                        <img src="p4.jpeg" alt="Coucher de soleil — silhouettes" />
+                        <div class="photo-date">2024</div>
+                        <div class="photo-caption">Golden hour</div>
+                    </div>
+
+                    <div class="photo-frame" onclick="openLightbox(this)">
+                        <img src="p5.jpeg" alt="Le chat philosophe" />
+                        <div class="photo-date">2024</div>
+                        <div class="photo-caption">Le philosophe</div>
+                    </div>
+
+                    <div class="photo-frame" onclick="openLightbox(this)">
+                        <img src="p6.jpeg" alt="Cavaliers — paysage marocain" />
+                        <div class="photo-date">2024</div>
+                        <div class="photo-caption">Cavaliers au crépuscule</div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- PENSÉES -->
+        <section id="pensees" class="section">
+            <div class="section-inner">
+                <div class="section-header">
+                    <div class="section-num">05</div>
+                    <div class="section-title-block">
+                        <div class="section-title">PENSÉES ALÉATOIRES</div>
+                        <div class="section-sub">// Random thoughts — un flux de conscience</div>
+                    </div>
+                </div>
+                <div class="thoughts-feed">
+
+                    <div class="thought-entry">
+                        <div class="thought-date">18 Mai<br>2025</div>
+                        <div class="thought-content">
+                            <span class="thought-lang-badge">English</span>
+                            <div class="thought-text"><strong>Don't feel better... BE BETTER.</strong></div>
+                            <div class="thought-tag">discipline</div>
+                        </div>
+                    </div>
+
+                    <div class="thought-entry">
+                        <div class="thought-date">18 Mai<br>2025</div>
+                        <div class="thought-content">
+                            <span class="thought-lang-badge">English</span>
+                            <div class="thought-text"><em>Be great and be gone.</em></div>
+                            <div class="thought-tag">legacy</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- À PROPOS -->
+        <section id="about" class="section">
+            <div class="section-inner">
+                <div class="section-header">
+                    <div class="section-num">06</div>
+                    <div class="section-title-block">
+                        <div class="section-title">À PROPOS</div>
+                        <div class="section-sub">// Identité — compétences — formation</div>
+                    </div>
+                </div>
+                <div class="about-cols">
+                    <div>
+                        <div class="about-portrait">
+                            <img src="me.jpeg" alt="KASSIMI Achraf — Portrait" />
+                        </div>
+                        <div class="about-portrait-caption">KASSIMI Achraf — Meknès</div>
+
+                        <div class="about-quote">
+                            "La discipline de choisir un mot et la discipline de choisir une fonction de perte sont
+                            <em>la même discipline.</em>"
+                        </div>
+
+                        <div class="about-quote" style="border-left-color:var(--mustard)">
+                            "Don't feel better... <strong>BE BETTER.</strong>"
+                        </div>
+
+                        <div class="about-quote" style="border-left-color:var(--fade);font-size:.95rem">
+                            "Be great and be gone."
+                        </div>
+
+                        <div class="about-bio-text">
+                            Étudiant en ingénierie IA à <em>ENSAM Meknès</em>, forgé dans la rigueur des sciences
+                            mathématiques (MPSI/MP). Mon travail relie <em>Meta-Reinforcement Learning</em>, <em>IA
+                                générative avec RAG</em> et <em>Vision par ordinateur</em> pour systèmes
+                            industriels.<br><br>
+                            J'écris de la poésie dans le même souffle que j'entraîne des réseaux de neurones — non pas
+                            malgré la contradiction, mais parce qu'elles demandent <strong>la même précision.</strong>
+                        </div>
+
+                        <div
+                            style="font-family:var(--typewriter);font-size:.58rem;letter-spacing:.25em;color:var(--mustard);margin-bottom:.6rem;text-transform:uppercase">
+                            // Formation</div>
+                        <div class="edu-line">▸ IA Engineering — <span>ENSAM Meknès</span> (2023–présent)</div>
+                        <div class="edu-line">▸ Classe Préparatoire — <span>MPSI/MP</span></div>
+                        <div class="edu-line">▸ Finalist — <span>Inno'vam 2024</span></div>
+                    </div>
+                    <div>
+                        <div
+                            style="font-family:var(--typewriter);font-size:.58rem;letter-spacing:.25em;color:var(--mustard);margin-bottom:1rem;text-transform:uppercase">
+                            // Compétences</div>
+
+                        <div class="skill-bar-group">
+                            <div class="skill-group-label">IA & Deep Learning</div>
+                            <div class="skill-row"><span class="skill-name">PyTorch / TF</span>
+                                <div class="skill-track">
+                                    <div class="skill-fill" style="--pct:92%"></div>
+                                </div>
+                            </div>
+                            <div class="skill-row"><span class="skill-name">Reinforcement RL</span>
+                                <div class="skill-track">
+                                    <div class="skill-fill" style="--pct:85%"></div>
+                                </div>
+                            </div>
+                            <div class="skill-row"><span class="skill-name">Computer Vision</span>
+                                <div class="skill-track">
+                                    <div class="skill-fill" style="--pct:88%"></div>
+                                </div>
+                            </div>
+                            <div class="skill-row"><span class="skill-name">NLP / LLMs</span>
+                                <div class="skill-track">
+                                    <div class="skill-fill" style="--pct:82%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="skill-bar-group">
+                            <div class="skill-group-label">IA Générative</div>
+                            <div class="skill-row"><span class="skill-name">LangChain</span>
+                                <div class="skill-track">
+                                    <div class="skill-fill" style="--pct:86%"></div>
+                                </div>
+                            </div>
+                            <div class="skill-row"><span class="skill-name">RAG Pipelines</span>
+                                <div class="skill-track">
+                                    <div class="skill-fill" style="--pct:83%"></div>
+                                </div>
+                            </div>
+                            <div class="skill-row"><span class="skill-name">Vector DBs</span>
+                                <div class="skill-track">
+                                    <div class="skill-fill" style="--pct:78%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="skill-bar-group">
+                            <div class="skill-group-label">Ingénierie & Craft</div>
+                            <div class="skill-row"><span class="skill-name">Python</span>
+                                <div class="skill-track">
+                                    <div class="skill-fill" style="--pct:95%"></div>
+                                </div>
+                            </div>
+                            <div class="skill-row"><span class="skill-name">Java / Spring</span>
+                                <div class="skill-track">
+                                    <div class="skill-fill" style="--pct:72%"></div>
+                                </div>
+                            </div>
+                            <div class="skill-row"><span class="skill-name">Mathématiques</span>
+                                <div class="skill-track">
+                                    <div class="skill-fill" style="--pct:90%"></div>
+                                </div>
+                            </div>
+                            <div class="skill-row"><span class="skill-name">Poésie</span>
+                                <div class="skill-track">
+                                    <div class="skill-fill gold" style="--pct:97%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CONTACT -->
+        <section id="contact" class="section">
+            <div class="section-inner">
+                <div class="contact-big">CONSTRUISONS<br><span class="red">ENSEMBLE.</span></div>
+                <div class="contact-cells">
+                    <a class="contact-cell" href="mailto:achraf.kassimi@ensam.ma">
+                        <div class="contact-cell-icon">✉</div>
+                        <div class="contact-cell-label">EMAIL</div>
+                        <div class="contact-cell-val">achraf.kassimi@ensam.ma</div>
+                    </a>
+                    <a class="contact-cell" href="https://linkedin.com/in/kassimi-achraf" target="_blank"
+                        rel="noopener">
+                        <div class="contact-cell-icon">IN</div>
+                        <div class="contact-cell-label">LINKEDIN</div>
+                        <div class="contact-cell-val">kassimi-achraf</div>
+                    </a>
+                    <a class="contact-cell" href="https://github.com/kassimi-achraf" target="_blank" rel="noopener">
+                        <div class="contact-cell-icon">&lt;/&gt;</div>
+                        <div class="contact-cell-label">GITHUB</div>
+                        <div class="contact-cell-val">kassimi-achraf</div>
+                    </a>
+                </div>
+                <div
+                    style="background:rgba(13,13,8,.9);border:1px solid rgba(242,234,216,.05);border-top:none;max-width:100%;padding:1rem;text-align:center;font-family:var(--typewriter);font-size:.58rem;letter-spacing:.2em;color:var(--fade)">
+                    📍 MEKNÈS, MAROC &nbsp;·&nbsp; OUVERT AUX STAGES, RECHERCHE &amp; COLLABORATIONS
+                </div>
+                <div class="contact-philosophy">
+                    « Les meilleurs algorithmes, comme les meilleurs poèmes,<br>disent le plus en le moins de mots
+                    possible. »
+                </div>
+            </div>
+        </section>
+
+    </div><!-- /#stage -->
+
+    <!-- ── TICKER ── -->
+    <div id="ticker-bar">
+        <div class="ticker-tape" id="ticker-tape"></div>
+    </div>
+
+    <!-- ── LIGHTBOX ── -->
+    <div id="lightbox" onclick="closeLightbox()">
+        <button class="lb-close">× FERMER</button>
+        <div id="lb-inner"></div>
+    </div>
+
+    <script>
+        // ═══ BOOT COUNTDOWN ═══
+        const bootEl = document.getElementById('boot');
+        const countEl = document.getElementById('countdown-num');
+        let n = 3;
+        countEl.textContent = n;
+        const iv = setInterval(() => {
+            n--;
+            countEl.textContent = n;
+            if (n <= 0) {
+                clearInterval(iv);
+                bootEl.classList.add('fade');
+                setTimeout(() => { bootEl.style.display = 'none'; animateSkills(); }, 800);
+            }
+        }, 500);
+
+        // ═══ NAVIGATION ═══
+        const SECS = ['hero', 'projects', 'poemes', 'photos', 'pensees', 'about', 'contact'];
+        const NAV_MAP = { 'hero': 'ACCUEIL', 'projects': 'PROJETS', 'poemes': 'POÈMES', 'photos': 'PHOTOS', 'pensees': 'PENSÉES', 'about': 'À PROPOS', 'contact': 'CONTACT' };
+
+        function goTo(id) {
+            const el = document.getElementById(id);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Highlight active nav item on scroll
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const id = entry.target.id;
+                    document.querySelectorAll('.film-nav-item').forEach(b => {
+                        b.classList.toggle('active', b.textContent === NAV_MAP[id]);
+                    });
+                    // Trigger skill bar animation when About comes into view
+                    if (id === 'about') setTimeout(animateSkills, 300);
+                }
+            });
+        }, { threshold: 0.3 });
+
+        SECS.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) observer.observe(el);
+        });
+
+        // Escape closes lightbox
+        window.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeLightbox();
+        });
+
+        // ═══ SKILL BARS ═══
+        function animateSkills() {
+            document.querySelectorAll('.skill-fill').forEach(el => {
+                el.classList.remove('active');
+                requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('active')));
+            });
+        }
+
+        // ═══ LIGHTBOX ═══
+        function openLightbox(frame) {
+            const lb = document.getElementById('lightbox');
+            const inner = document.getElementById('lb-inner');
+            const img = frame.querySelector('img');
+            if (img) {
+                inner.innerHTML = `<img src="${img.src}" style="max-width:90vw;max-height:85vh;filter:sepia(.3) contrast(1.1)"/>`;
+            }
+            lb.classList.add('open');
+        }
+        function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
+
+        // ═══ TICKER ═══
+        const items = [
+            { t: 'KASSIMI ACHRAF', cls: '' },
+            { t: '·', cls: '' },
+            { t: 'IA ENGINEER', cls: 'gold' },
+            { t: '·', cls: '' },
+            { t: 'POÈTE', cls: 'red' },
+            { t: '·', cls: '' },
+            { t: 'ENSAM MEKNÈS', cls: '' },
+            { t: '·', cls: '' },
+            { t: 'DON\'T FEEL BETTER... BE BETTER.', cls: 'red' },
+            { t: '·', cls: '' },
+            { t: 'META-REINFORCEMENT LEARNING', cls: 'gold' },
+            { t: '·', cls: '' },
+            { t: 'GENERATIVE AI', cls: '' },
+            { t: '·', cls: '' },
+            { t: 'BE GREAT AND BE GONE.', cls: 'gold' },
+            { t: '·', cls: '' },
+            { t: 'COMPUTER VISION', cls: '' },
+            { t: '·', cls: '' },
+            { t: '«\u00A0LA RIGUEUR × L\'IMAGINATION = LE SIGNAL\u00A0»', cls: 'red' },
+            { t: '·', cls: '' },
+            { t: 'FINALIST INNO\'VAM 2024', cls: 'gold' },
+            { t: '·', cls: '' },
+            { t: 'MEKNÈS · MAROC', cls: '' },
+            { t: '·', cls: '' },
+        ];
+        const tape = document.getElementById('ticker-tape');
+        // duplicate for seamless loop
+        [...items, ...items].forEach(it => {
+            const d = document.createElement('span');
+            d.className = 'ticker-item ' + (it.cls || '');
+            d.textContent = it.t;
+            tape.appendChild(d);
+        });
+
+        // ═══ POEM click — expand ═══
+        document.querySelectorAll('.poem-entry').forEach(p => {
+            p.addEventListener('click', function () {
+                this.style.gridColumn = this.style.gridColumn ? '' : '1 / -1';
+            });
+        });
+    </script>
+</body>
+
+</html>
