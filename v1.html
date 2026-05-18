@@ -1,0 +1,2279 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KASSIMI Achraf — AI Engineer & Poet</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100;0,300;0,400;0,700;1,300&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Space+Grotesk:wght@300;400;700&display=swap"
+        rel="stylesheet" />
+    <style>
+        :root {
+            --bg: #04040a;
+            --surface: rgba(8, 8, 20, 0.85);
+            --cyan: #00f0ff;
+            --cyan-dim: rgba(0, 240, 255, 0.12);
+            --cyan-mid: rgba(0, 240, 255, 0.4);
+            --gold: #c8a96e;
+            --cream: #ede8d8;
+            --cream-dim: rgba(237, 232, 216, 0.55);
+            --red: #ff3366;
+            --green: #00ff88;
+            --mono: 'JetBrains Mono', monospace;
+            --serif: 'Cormorant Garamond', serif;
+            --sans: 'Space Grotesk', sans-serif;
+            --glow-cyan: 0 0 30px rgba(0, 240, 255, 0.35), 0 0 80px rgba(0, 240, 255, 0.1);
+            --glow-gold: 0 0 20px rgba(200, 169, 110, 0.4);
+            --aberration: 0px;
+            --mesh-speed: 1;
+            --frozen: 0;
+        }
+
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: var(--bg);
+            color: var(--cream);
+            font-family: var(--mono);
+            cursor: none;
+        }
+
+        /* ─── CURSOR ─── */
+        #cursor {
+            position: fixed;
+            z-index: 9999;
+            width: 10px;
+            height: 10px;
+            background: var(--cyan);
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            transition: width .2s, height .2s, background .2s;
+            mix-blend-mode: screen;
+            box-shadow: var(--glow-cyan);
+        }
+
+        #cursor-ring {
+            position: fixed;
+            z-index: 9998;
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--cyan-mid);
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            transition: all .12s ease-out;
+        }
+
+        body:hover #cursor {
+            opacity: 1;
+        }
+
+        /* ─── WEBGL CANVAS ─── */
+        #webgl {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+        }
+
+        /* ─── GRAIN ─── */
+        #grain {
+            position: fixed;
+            inset: -50%;
+            width: 200%;
+            height: 200%;
+            z-index: 1;
+            pointer-events: none;
+            opacity: 0.032;
+            animation: grainShift .4s steps(3) infinite;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='f'%3E%3CfeTurbulence baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23f)'/%3E%3C/svg%3E");
+        }
+
+        @keyframes grainShift {
+            0% {
+                transform: translate(0, 0)
+            }
+
+            33% {
+                transform: translate(-2%, 3%)
+            }
+
+            66% {
+                transform: translate(3%, -2%)
+            }
+
+            100% {
+                transform: translate(-1%, 1%)
+            }
+        }
+
+        /* ─── CHROMATIC ABERRATION ─── */
+        #aberration-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            pointer-events: none;
+            opacity: 0;
+            background: transparent;
+            mix-blend-mode: screen;
+            transition: opacity .1s;
+        }
+
+        body.glitching {
+            animation: glitchBody .08s steps(1) infinite;
+        }
+
+        @keyframes glitchBody {
+            0% {
+                filter: none;
+            }
+
+            25% {
+                filter: drop-shadow(-3px 0 0 rgba(255, 0, 100, .7)) drop-shadow(3px 0 0 rgba(0, 255, 200, .7));
+            }
+
+            50% {
+                filter: drop-shadow(3px 0 0 rgba(255, 0, 100, .7)) drop-shadow(-3px 0 0 rgba(0, 200, 255, .7));
+                transform: skewX(0.3deg);
+            }
+
+            75% {
+                filter: drop-shadow(-2px 0 0 rgba(0, 255, 100, .7));
+                transform: skewX(-0.3deg);
+            }
+
+            100% {
+                filter: none;
+            }
+        }
+
+        /* ─── MAIN STAGE ─── */
+        #stage {
+            position: fixed;
+            inset: 0;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        /* ─── SECTIONS ─── */
+        .section {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem 2rem 120px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .7s cubic-bezier(.16, 1, .3, 1);
+            will-change: opacity;
+        }
+
+        .section.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* ─── HERO ─── */
+        #hero {
+            justify-content: center;
+            align-items: flex-start;
+            padding-left: clamp(2rem, 8vw, 8rem);
+        }
+
+        .hero-pre {
+            font-size: .65rem;
+            letter-spacing: .35em;
+            color: var(--cyan);
+            margin-bottom: 1.2rem;
+            opacity: 0;
+            animation: slideIn .8s .3s cubic-bezier(.16, 1, .3, 1) forwards;
+        }
+
+        .hero-name {
+            font-family: var(--sans);
+            font-size: clamp(3.5rem, 10vw, 9rem);
+            font-weight: 700;
+            line-height: .88;
+            letter-spacing: -.02em;
+            margin-bottom: 1.5rem;
+            opacity: 0;
+            animation: slideIn .9s .5s cubic-bezier(.16, 1, .3, 1) forwards;
+        }
+
+        .hero-name .accent {
+            color: var(--cyan);
+            display: block;
+        }
+
+        .hero-title {
+            font-family: var(--serif);
+            font-style: italic;
+            font-size: clamp(1.1rem, 2.8vw, 2rem);
+            font-weight: 300;
+            color: var(--cream-dim);
+            margin-bottom: 2.5rem;
+            opacity: 0;
+            animation: slideIn .9s .7s cubic-bezier(.16, 1, .3, 1) forwards;
+        }
+
+        .hero-meta {
+            font-size: .7rem;
+            letter-spacing: .2em;
+            color: rgba(237, 232, 216, .35);
+            opacity: 0;
+            animation: slideIn .9s .9s cubic-bezier(.16, 1, .3, 1) forwards;
+            line-height: 2.2;
+        }
+
+        .hero-meta span {
+            color: var(--cyan);
+        }
+
+        .hero-hint {
+            position: absolute;
+            bottom: 140px;
+            left: clamp(2rem, 8vw, 8rem);
+            font-size: .6rem;
+            letter-spacing: .3em;
+            color: rgba(237, 232, 216, .2);
+            opacity: 0;
+            animation: pulse 2s 2s ease-in-out infinite, fadeIn 1s 1.5s forwards;
+            pointer-events: all;
+            cursor: pointer;
+        }
+
+        .hero-hint kbd {
+            border: 1px solid rgba(0, 240, 255, .3);
+            padding: .1rem .4rem;
+            border-radius: 3px;
+            color: var(--cyan);
+            font-family: var(--mono);
+            font-size: .6rem;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: .2
+            }
+
+            50% {
+                opacity: .7
+            }
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(24px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        /* ─── PROJECTS ─── */
+        #projects {
+            padding: 2rem 4rem 140px;
+            align-items: flex-start;
+        }
+
+        .section-label {
+            font-size: .6rem;
+            letter-spacing: .35em;
+            color: var(--cyan);
+            margin-bottom: 3rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .section-label::after {
+            content: '';
+            flex: 1;
+            max-width: 60px;
+            height: 1px;
+            background: var(--cyan-mid);
+        }
+
+        .projects-container {
+            width: 100%;
+            max-width: 1100px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        @media(max-width:900px) {
+            .projects-container {
+                grid-template-columns: 1fr 1fr
+            }
+        }
+
+        @media(max-width:600px) {
+            .projects-container {
+                grid-template-columns: 1fr
+            }
+        }
+
+        .project-card {
+            position: relative;
+            overflow: hidden;
+            background: var(--surface);
+            border: 1px solid rgba(0, 240, 255, .08);
+            padding: 1.8rem;
+            cursor: pointer;
+            transition: border-color .3s, transform .3s, box-shadow .3s;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            pointer-events: all;
+        }
+
+        .project-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+            transform: scaleX(0);
+            transition: transform .4s;
+        }
+
+        .project-card:hover {
+            border-color: rgba(0, 240, 255, .35);
+            transform: translateY(-4px);
+            box-shadow: var(--glow-cyan);
+        }
+
+        .project-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .project-card:hover .card-code {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .card-tag {
+            font-size: .55rem;
+            letter-spacing: .3em;
+            color: var(--cyan);
+            margin-bottom: .8rem;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        .card-tag::before {
+            content: '▸';
+        }
+
+        .card-title {
+            font-family: var(--sans);
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: -.01em;
+            margin-bottom: .8rem;
+            line-height: 1.2;
+        }
+
+        .card-desc {
+            font-size: .7rem;
+            line-height: 1.85;
+            color: var(--cream-dim);
+            margin-bottom: 1rem;
+        }
+
+        .card-chips {
+            display: flex;
+            gap: .4rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .chip {
+            padding: .15rem .5rem;
+            font-size: .55rem;
+            letter-spacing: .15em;
+            background: var(--cyan-dim);
+            color: var(--cyan);
+            border: 1px solid rgba(0, 240, 255, .2);
+        }
+
+        .card-award {
+            font-size: .58rem;
+            color: var(--gold);
+            letter-spacing: .15em;
+            padding-top: .8rem;
+            border-top: 1px solid rgba(200, 169, 110, .15);
+        }
+
+        .card-code {
+            position: absolute;
+            inset: 0;
+            background: rgba(4, 4, 10, .96);
+            padding: 1.5rem;
+            font-size: .6rem;
+            line-height: 1.9;
+            color: #7ec8e3;
+            transform: translateY(100%);
+            opacity: 0;
+            transition: transform .4s cubic-bezier(.16, 1, .3, 1), opacity .3s;
+            overflow: auto;
+        }
+
+        .ck {
+            color: var(--cyan);
+        }
+
+        .cs {
+            color: #98c379;
+        }
+
+        .cc {
+            color: rgba(120, 140, 160, .6);
+        }
+
+        .cf {
+            color: #e5c07b;
+        }
+
+        /* ─── POETRY ─── */
+        #poetry {
+            overflow: hidden;
+            perspective: 800px;
+        }
+
+        .poetry-stage {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .word-cloud {
+            position: absolute;
+            inset: 0;
+            pointer-events: all;
+        }
+
+        .floating-word {
+            position: absolute;
+            font-family: var(--serif);
+            color: var(--cream-dim);
+            cursor: pointer;
+            transition: color .3s, text-shadow .3s, transform .1s;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        .floating-word:hover {
+            color: var(--cyan);
+            text-shadow: var(--glow-cyan);
+        }
+
+        .poem-modal {
+            position: absolute;
+            background: rgba(4, 4, 10, .88);
+            border: 1px solid rgba(0, 240, 255, .25);
+            backdrop-filter: blur(30px) saturate(1.5);
+            -webkit-backdrop-filter: blur(30px) saturate(1.5);
+            padding: 2.5rem;
+            max-width: 480px;
+            width: 90%;
+            z-index: 50;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(10px) scale(.97);
+            transition: opacity .35s, transform .35s cubic-bezier(.16, 1, .3, 1);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, .6), var(--glow-cyan);
+        }
+
+        .poem-modal.visible {
+            opacity: 1;
+            pointer-events: all;
+            transform: none;
+        }
+
+        .poem-modal-title {
+            font-size: .6rem;
+            letter-spacing: .35em;
+            color: var(--cyan);
+            margin-bottom: 1.5rem;
+        }
+
+        .poem-modal-text {
+            font-family: var(--serif);
+            font-style: italic;
+            font-size: 1rem;
+            line-height: 2.3;
+            color: var(--cream);
+            white-space: pre-line;
+        }
+
+        .poem-modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: .6rem;
+            color: rgba(237, 232, 216, .3);
+            cursor: pointer;
+            letter-spacing: .2em;
+            background: none;
+            border: none;
+            color: inherit;
+            font-family: var(--mono);
+        }
+
+        .poem-modal-close:hover {
+            color: var(--red);
+        }
+
+        /* ─── SKILLS / ABOUT ─── */
+        #about {
+            flex-direction: row;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 4rem;
+            padding: 2rem 6rem 140px;
+            flex-wrap: wrap;
+        }
+
+        @media(max-width:900px) {
+            #about {
+                padding: 2rem 2rem 140px;
+                gap: 2rem;
+            }
+        }
+
+        .about-left {
+            flex: 1;
+            min-width: 280px;
+            max-width: 420px;
+        }
+
+        .about-right {
+            flex: 1;
+            min-width: 280px;
+            max-width: 420px;
+        }
+
+        .about-bio {
+            font-size: .78rem;
+            line-height: 2.1;
+            color: var(--cream-dim);
+            margin-bottom: 2rem;
+        }
+
+        .about-bio strong {
+            color: var(--cream);
+            font-weight: 400;
+        }
+
+        .about-bio em {
+            color: var(--cyan);
+            font-style: normal;
+        }
+
+        .skill-group {
+            margin-bottom: 1.8rem;
+        }
+
+        .skill-group-label {
+            font-size: .58rem;
+            letter-spacing: .3em;
+            color: var(--cyan);
+            margin-bottom: .8rem;
+        }
+
+        .skill-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: .5rem;
+            font-size: .65rem;
+            color: var(--cream-dim);
+        }
+
+        .skill-track {
+            flex: 1;
+            height: 1px;
+            background: rgba(237, 232, 216, .08);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .skill-fill {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            background: var(--cyan);
+            width: 0;
+            transition: width 1.2s cubic-bezier(.16, 1, .3, 1);
+            box-shadow: 0 0 8px var(--cyan);
+        }
+
+        .skill-fill.animated {
+            width: var(--pct);
+        }
+
+        /* ─── CONTACT ─── */
+        #contact {
+            gap: .5rem;
+        }
+
+        .contact-huge {
+            font-family: var(--sans);
+            font-size: clamp(3rem, 9vw, 8rem);
+            font-weight: 700;
+            letter-spacing: -.03em;
+            line-height: .85;
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .contact-huge .line2 {
+            color: var(--cyan);
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            background: rgba(0, 240, 255, .08);
+            border: 1px solid rgba(0, 240, 255, .08);
+            max-width: 680px;
+            width: 90%;
+            pointer-events: all;
+        }
+
+        @media(max-width:600px) {
+            .contact-grid {
+                grid-template-columns: 1fr
+            }
+        }
+
+        .contact-cell {
+            background: var(--surface);
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: background .25s;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        .contact-cell:hover {
+            background: var(--cyan-dim);
+        }
+
+        .contact-cell-icon {
+            font-size: 1.2rem;
+        }
+
+        .contact-cell-label {
+            font-size: .55rem;
+            letter-spacing: .3em;
+            color: var(--cyan);
+        }
+
+        .contact-cell-val {
+            font-size: .7rem;
+            color: var(--cream-dim);
+        }
+
+        .contact-philosophy {
+            font-family: var(--serif);
+            font-style: italic;
+            font-size: 1rem;
+            color: var(--cream-dim);
+            text-align: center;
+            max-width: 460px;
+            line-height: 1.9;
+            margin-top: 2rem;
+        }
+
+        /* ─── TERMINAL DOCK ─── */
+        #terminal-dock {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            pointer-events: all;
+        }
+
+        .terminal-bar {
+            display: flex;
+            align-items: center;
+            background: rgba(4, 4, 10, .96);
+            border-top: 1px solid rgba(0, 240, 255, .12);
+            padding: 0 1.5rem;
+            height: 48px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .term-prompt {
+            color: var(--cyan);
+            font-size: .75rem;
+            margin-right: .75rem;
+            white-space: nowrap;
+        }
+
+        #term-input {
+            flex: 1;
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--cream);
+            font-family: var(--mono);
+            font-size: .75rem;
+            caret-color: var(--cyan);
+        }
+
+        #term-input::placeholder {
+            color: rgba(237, 232, 216, .2);
+        }
+
+        .term-status {
+            font-size: .6rem;
+            letter-spacing: .2em;
+            color: rgba(237, 232, 216, .2);
+            white-space: nowrap;
+            margin-left: 1rem;
+        }
+
+        .term-status.active {
+            color: var(--cyan);
+        }
+
+        .terminal-output {
+            max-height: 0;
+            overflow: hidden;
+            background: rgba(4, 4, 10, .98);
+            border-top: 1px solid rgba(0, 240, 255, .06);
+            transition: max-height .35s cubic-bezier(.16, 1, .3, 1);
+            font-size: .68rem;
+            line-height: 1.8;
+        }
+
+        .terminal-output.open {
+            max-height: 220px;
+            overflow-y: auto;
+        }
+
+        .term-log {
+            padding: .3rem 1.5rem;
+        }
+
+        .term-log.cmd {
+            color: var(--cyan);
+        }
+
+        .term-log.ok {
+            color: var(--green);
+        }
+
+        .term-log.err {
+            color: var(--red);
+        }
+
+        .term-log.info {
+            color: var(--cream-dim);
+        }
+
+        .term-log.dim {
+            color: rgba(237, 232, 216, .25);
+        }
+
+        .term-log.gold {
+            color: var(--gold);
+        }
+
+        /* ─── CMD PALETTE ─── */
+        #cmd-palette {
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%) scale(.96);
+            z-index: 300;
+            width: 580px;
+            max-width: 94vw;
+            background: rgba(4, 4, 10, .97);
+            border: 1px solid rgba(0, 240, 255, .2);
+            backdrop-filter: blur(40px) saturate(2);
+            -webkit-backdrop-filter: blur(40px) saturate(2);
+            box-shadow: 0 40px 120px rgba(0, 0, 0, .8), var(--glow-cyan);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .25s, transform .25s cubic-bezier(.16, 1, .3, 1);
+        }
+
+        #cmd-palette.open {
+            opacity: 1;
+            pointer-events: all;
+            transform: translateX(-50%) scale(1);
+        }
+
+        .palette-header {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid rgba(0, 240, 255, .08);
+        }
+
+        .palette-icon {
+            color: var(--cyan);
+            font-size: .8rem;
+        }
+
+        #palette-input {
+            flex: 1;
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--cream);
+            font-family: var(--mono);
+            font-size: .82rem;
+            caret-color: var(--cyan);
+        }
+
+        #palette-input::placeholder {
+            color: rgba(237, 232, 216, .25);
+        }
+
+        .palette-close {
+            font-size: .6rem;
+            color: rgba(237, 232, 216, .3);
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: inherit;
+            font-family: var(--mono);
+            letter-spacing: .15em;
+        }
+
+        .palette-close:hover {
+            color: var(--red);
+        }
+
+        .palette-list {
+            max-height: 320px;
+            overflow-y: auto;
+        }
+
+        .palette-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: .8rem 1.25rem;
+            cursor: pointer;
+            transition: background .15s;
+            border-bottom: 1px solid rgba(0, 240, 255, .04);
+            pointer-events: all;
+        }
+
+        .palette-item:hover,
+        .palette-item.highlighted {
+            background: var(--cyan-dim);
+        }
+
+        .palette-item-left {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+        }
+
+        .palette-item-icon {
+            color: var(--cyan);
+            font-size: .75rem;
+            width: 16px;
+            text-align: center;
+        }
+
+        .palette-item-label {
+            font-size: .75rem;
+            color: var(--cream);
+        }
+
+        .palette-item-desc {
+            font-size: .6rem;
+            color: rgba(237, 232, 216, .35);
+            margin-top: .1rem;
+        }
+
+        .palette-item-kbd {
+            font-size: .55rem;
+            color: rgba(237, 232, 216, .25);
+            border: 1px solid rgba(237, 232, 216, .1);
+            padding: .1rem .35rem;
+            border-radius: 2px;
+        }
+
+        .palette-section-title {
+            padding: .5rem 1.25rem .25rem;
+            font-size: .55rem;
+            letter-spacing: .3em;
+            color: rgba(237, 232, 216, .2);
+        }
+
+        /* ─── TRANSITION OVERLAY ─── */
+        #transition-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 500;
+            background: var(--bg);
+            pointer-events: none;
+            opacity: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+        }
+
+        #transition-overlay.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .loss-curve {
+            width: 300px;
+            height: 80px;
+            border-bottom: 1px solid rgba(0, 240, 255, .2);
+            border-left: 1px solid rgba(0, 240, 255, .2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .loss-path {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .train-log {
+            font-size: .65rem;
+            color: var(--green);
+            letter-spacing: .1em;
+            text-align: left;
+            width: 300px;
+            height: 80px;
+            overflow: hidden;
+        }
+
+        .train-line {
+            color: var(--green);
+        }
+
+        .train-line.dim {
+            color: rgba(0, 240, 255, .35);
+        }
+
+        /* ─── MISC ─── */
+        .active-section-indicator {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            z-index: 90;
+            font-size: .58rem;
+            letter-spacing: .25em;
+            color: rgba(237, 232, 216, .18);
+            pointer-events: none;
+        }
+
+        #palette-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 299;
+            display: none;
+        }
+
+        #palette-backdrop.open {
+            display: block;
+        }
+
+        /* autocomplete ghost */
+        #term-ghost {
+            position: absolute;
+            color: rgba(237, 232, 216, .18);
+            font-family: var(--mono);
+            font-size: .75rem;
+            pointer-events: none;
+            white-space: nowrap;
+            top: 50%;
+            transform: translateY(-50%);
+            left: 0;
+        }
+
+        .term-input-wrap {
+            position: relative;
+            flex: 1;
+        }
+
+        /* heartbeat */
+        @keyframes heartbeat {
+
+            0%,
+            100% {
+                font-weight: 300
+            }
+
+            50% {
+                font-weight: 700
+            }
+        }
+
+        #term-input.typing {
+            animation: heartbeat .8s ease-in-out infinite;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Cursors -->
+    <div id="cursor"></div>
+    <div id="cursor-ring"></div>
+
+    <!-- Grain texture -->
+    <div id="grain"></div>
+
+    <!-- WebGL canvas -->
+    <canvas id="webgl"></canvas>
+
+    <!-- Aberration overlay -->
+    <div id="aberration-overlay"></div>
+
+    <!-- Transition overlay -->
+    <div id="transition-overlay">
+        <div style="font-size:.6rem;letter-spacing:.3em;color:var(--cyan);margin-bottom:1rem">// OPTIMIZING VIEW</div>
+        <div class="loss-curve">
+            <svg class="loss-path" viewBox="0 0 300 80" preserveAspectRatio="none">
+                <polyline id="loss-polyline" points="" fill="none" stroke="#00f0ff" stroke-width="1.5" opacity=".7" />
+            </svg>
+        </div>
+        <div class="train-log" id="train-log"></div>
+    </div>
+
+    <!-- Section indicator -->
+    <div class="active-section-indicator" id="section-indicator">HERO</div>
+
+    <!-- ═══════════════ STAGE ═══════════════ -->
+    <div id="stage">
+
+        <!-- ─── HERO ─── -->
+        <section id="hero" class="section active">
+            <div class="hero-pre">// AI ENGINEER & POET — ENSAM MEKNÈS, MOROCCO</div>
+            <h1 class="hero-name">
+                KASSIMI<br>
+                <span class="accent">ACHRAF</span>
+            </h1>
+            <div class="hero-title">The Poet in the Machine — where silicon dreams in verse</div>
+            <div class="hero-meta">
+                <span>▸ Meta-Reinforcement Learning</span><br>
+                <span>▸ Generative AI &amp; RAG Pipelines</span><br>
+                <span>▸ Computer Vision for Industrial Systems</span><br>
+                <span>▸ Also: poetry</span>
+            </div>
+            <div class="hero-hint" onclick="openPalette()">
+                Press <kbd>CMD+K</kbd> or <kbd>CTRL+K</kbd> to navigate &nbsp;·&nbsp; Type commands below
+            </div>
+        </section>
+
+        <!-- ─── PROJECTS ─── -->
+        <section id="projects" class="section">
+            <div class="section-label">// AI PROJECT VAULT — HOVER CARDS TO REVEAL CODE</div>
+            <div class="projects-container">
+
+                <div class="project-card" onclick="selectProject('siana')">
+                    <div class="card-code">
+                        <span class="cc"># SIANA — Railway Inspection Pipeline</span><br>
+                        <span class="ck">from</span> ultralytics <span class="ck">import</span> YOLO<br>
+                        <span class="ck">import</span> cv2, torch<br><br>
+                        <span class="ck">class</span> <span class="cf">RailwayInspector</span>:<br>
+                        &nbsp;&nbsp;<span class="ck">def</span> <span class="cf">detect</span>(self, frame):<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;results = self.model(frame)<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="ck">return</span> results.pandas().xyxy[0]<br><br>
+                        <span class="cc"># Precision: 94.2% @ IoU=0.5</span><br>
+                        <span class="cc"># Finalist: Inno'vam 2024</span>
+                    </div>
+                    <div class="card-tag">COMPUTER VISION</div>
+                    <div class="card-title">SIANA Railway<br>Inspection Robot</div>
+                    <div class="card-desc">Autonomous inspection robot with YOLO-based real-time defect detection.
+                        Identifies rail cracks, missing bolts, and track deformations to replace hazardous manual
+                        inspection.</div>
+                    <div class="card-chips">
+                        <span class="chip">YOLO v8</span><span class="chip">OpenCV</span><span class="chip">ROS
+                            2</span><span class="chip">PyTorch</span><span class="chip">RPi</span>
+                    </div>
+                    <div class="card-award">⭐ FINALIST — INNO'VAM NATIONAL COMPETITION 2024</div>
+                </div>
+
+                <div class="project-card" onclick="selectProject('fmea')">
+                    <div class="card-code">
+                        <span class="cc"># FMEA GenAI — RAG Risk Engine</span><br>
+                        <span class="ck">from</span> langchain.chains <span class="ck">import</span> RetrievalQA<br>
+                        <span class="ck">from</span> langchain.vectorstores <span class="ck">import</span> FAISS<br><br>
+                        <span class="ck">class</span> <span class="cf">FMEAAssistant</span>:<br>
+                        &nbsp;&nbsp;<span class="ck">def</span> <span class="cf">analyze</span>(self, component):<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;query = f<span class="cs">"FMEA for {component}"</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="ck">return</span> self.chain({<span
+                            class="cs">"query"</span>: query})<br><br>
+                        <span class="cc"># LangChain + FAISS + GPT-4</span>
+                    </div>
+                    <div class="card-tag">GENERATIVE AI · RAG</div>
+                    <div class="card-title">FMEA GenAI<br>Risk Analyzer</div>
+                    <div class="card-desc">LLM-powered Failure Mode & Effect Analysis using Retrieval-Augmented
+                        Generation. Ingests industrial documentation to surface risk vectors and mitigation strategies
+                        automatically.</div>
+                    <div class="card-chips">
+                        <span class="chip">LangChain</span><span class="chip">FAISS</span><span
+                            class="chip">GPT-4</span><span class="chip">RAG</span><span class="chip">Python</span>
+                    </div>
+                </div>
+
+                <div class="project-card" onclick="selectProject('metarl')">
+                    <div class="card-code">
+                        <span class="cc"># Meta-RL on TextWorld (MAML)</span><br>
+                        <span class="ck">from</span> higher <span class="ck">import</span> innerloop_ctx<br><br>
+                        <span class="ck">for</span> task <span class="ck">in</span> task_dist.sample(K):<br>
+                        &nbsp;&nbsp;with innerloop_ctx(model) as fmodel:<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;inner_loss = fmodel(task.support)<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;inner_loss.backward()<br>
+                        &nbsp;&nbsp;outer_loss += fmodel(task.query)<br>
+                        meta_optimizer.step()<br><br>
+                        <span class="cc"># Learn to learn. Fast adapt.</span>
+                    </div>
+                    <div class="card-tag">META-REINFORCEMENT LEARNING</div>
+                    <div class="card-title">Meta-RL<br>on TextWorld</div>
+                    <div class="card-desc">MAML-based meta-learning agent for rapid adaptation across text-based game
+                        environments. The agent learns the geometry of learning itself — generalizing to unseen
+                        linguistic tasks in 5 gradient steps.</div>
+                    <div class="card-chips">
+                        <span class="chip">MAML</span><span class="chip">TextWorld</span><span
+                            class="chip">PyTorch</span><span class="chip">NLP</span><span class="chip">RL</span>
+                    </div>
+                </div>
+
+                <div class="project-card" onclick="selectProject('lms')">
+                    <div class="card-code">
+                        <span class="cc"># Spring Boot LMS — REST API</span><br>
+                        <span class="cs">@RestController</span><br>
+                        <span class="cs">@RequestMapping</span>(<span class="cs">"/api/courses"</span>)<br>
+                        <span class="ck">public class</span> <span class="cf">CourseController</span> {<br>
+                        &nbsp;&nbsp;<span class="cs">@PostMapping</span>(<span class="cs">"/enroll"</span>)<br>
+                        &nbsp;&nbsp;<span class="ck">public</span> ResponseEntity enroll(<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="cs">@RequestBody</span> EnrollDTO dto) {<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="ck">return</span> service.enroll(dto);<br>
+                        &nbsp;&nbsp;}}<br>
+                        <span class="cc">// JWT auth + PostgreSQL</span>
+                    </div>
+                    <div class="card-tag">FULL-STACK · JAVA</div>
+                    <div class="card-title">Spring Boot<br>LMS Platform</div>
+                    <div class="card-desc">Full-featured Learning Management System built with Spring Boot and React.
+                        JWT-authenticated REST API, course management, progress tracking, and role-based access control.
+                    </div>
+                    <div class="card-chips">
+                        <span class="chip">Spring Boot</span><span class="chip">React</span><span
+                            class="chip">PostgreSQL</span><span class="chip">JWT</span>
+                    </div>
+                </div>
+
+                <div class="project-card" onclick="selectProject('pose')">
+                    <div class="card-code">
+                        <span class="cc"># AI FitTracker — Pose Detection</span><br>
+                        <span class="ck">import</span> mediapipe <span class="ck">as</span> mp<br><br>
+                        <span class="ck">def</span> <span class="cf">analyze_squat</span>(landmarks):<br>
+                        &nbsp;&nbsp;hip = landmarks[mp.solutions.<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;pose.PoseLandmark.LEFT_HIP]<br>
+                        &nbsp;&nbsp;knee = get_knee(landmarks)<br>
+                        &nbsp;&nbsp;angle = compute_angle(hip, knee)<br>
+                        &nbsp;&nbsp;<span class="ck">return</span> grade_form(angle)<br><br>
+                        <span class="cc"># Real-time rep counting + form</span>
+                    </div>
+                    <div class="card-tag">COMPUTER VISION · FITNESS AI</div>
+                    <div class="card-title">AI FitTracker<br>Pose Detection</div>
+                    <div class="card-desc">Real-time exercise form analysis using MediaPipe pose estimation. Counts
+                        reps, grades form quality, and provides corrective feedback — turning any webcam into a personal
+                        trainer.</div>
+                    <div class="card-chips">
+                        <span class="chip">MediaPipe</span><span class="chip">OpenCV</span><span
+                            class="chip">Python</span><span class="chip">NumPy</span>
+                    </div>
+                </div>
+
+                <div class="project-card" onclick="selectProject('datascience')">
+                    <div class="card-code">
+                        <span class="cc"># Data Science — Pipeline</span><br>
+                        <span class="ck">from</span> sklearn.pipeline <span class="ck">import</span> Pipeline<br>
+                        <span class="ck">from</span> sklearn.ensemble <span class="ck">import</span> GBM<br><br>
+                        pipe = Pipeline([<br>
+                        &nbsp;&nbsp;(<span class="cs">'preprocess'</span>, ColumnTransformer()),<br>
+                        &nbsp;&nbsp;(<span class="cs">'feat_eng'</span>, FeatureUnion()),<br>
+                        &nbsp;&nbsp;(<span class="cs">'model'</span>, GradientBoosting())<br>
+                        ])<br>
+                        pipe.fit(X_train, y_train)<br>
+                        <span class="cc"># Kaggle silver + EDA mastery</span>
+                    </div>
+                    <div class="card-tag">DATA SCIENCE · ML</div>
+                    <div class="card-title">Data Science<br>Stage &amp; Research</div>
+                    <div class="card-desc">Applied data science internship work covering EDA, feature engineering, and
+                        predictive modeling. Built end-to-end ML pipelines for real industrial datasets.</div>
+                    <div class="card-chips">
+                        <span class="chip">scikit-learn</span><span class="chip">Pandas</span><span
+                            class="chip">XGBoost</span><span class="chip">Plotly</span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ─── POETRY ─── -->
+        <section id="poetry" class="section">
+            <div class="poetry-stage" id="poetry-stage">
+                <div class="word-cloud" id="word-cloud"></div>
+                <div class="poem-modal" id="poem-modal">
+                    <button class="poem-modal-close" onclick="closePoemModal()">× CLOSE</button>
+                    <div class="poem-modal-title" id="poem-modal-title">POEM</div>
+                    <div class="poem-modal-text" id="poem-modal-text"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ─── ABOUT ─── -->
+        <section id="about" class="section">
+            <div class="about-left">
+                <div class="section-label" style="margin-bottom:1.5rem">// ABOUT</div>
+                <div class="about-bio">
+                    <strong>KASSIMI Achraf</strong> — AI Engineering student at <em>ENSAM Meknès</em>, forged in the
+                    rigour of Mathematical Sciences (MPSI/MP).<br><br>
+                    My work bridges <em>Meta-Reinforcement Learning</em>, <em>Generative AI with RAG pipelines</em>, and
+                    <em>Computer Vision</em> for industrial systems — always asking: what is the most elegant
+                    formulation?<br><br>
+                    I write poetry in the same breath I train neural networks. Not despite the contradiction — but
+                    because the discipline of choosing a word and the discipline of choosing a loss function are <em>the
+                        same discipline</em>.<br><br>
+                    <strong>Philosophy:</strong> Rigor without imagination is sterile. Imagination without rigor is
+                    noise. Together — signal.
+                </div>
+                <div style="font-size:.6rem;letter-spacing:.3em;color:var(--cyan);margin-bottom:.6rem">// EDUCATION
+                </div>
+                <div style="font-size:.68rem;line-height:2.2;color:var(--cream-dim)">
+                    ▸ AI Engineering — ENSAM Meknès (2023–present)<br>
+                    ▸ Classe Préparatoire MPSI/MP — Mathematical Sciences<br>
+                    ▸ Finalist — Inno'vam National Innovation Competition 2024
+                </div>
+            </div>
+            <div class="about-right">
+                <div class="section-label" style="margin-bottom:1.5rem">// SKILLS</div>
+                <div class="skill-group">
+                    <div class="skill-group-label">AI & DEEP LEARNING</div>
+                    <div class="skill-row"><span style="width:130px">PyTorch / TF</span>
+                        <div class="skill-track">
+                            <div class="skill-fill" style="--pct:92%"></div>
+                        </div>
+                    </div>
+                    <div class="skill-row"><span style="width:130px">Reinforcement RL</span>
+                        <div class="skill-track">
+                            <div class="skill-fill" style="--pct:85%"></div>
+                        </div>
+                    </div>
+                    <div class="skill-row"><span style="width:130px">Computer Vision</span>
+                        <div class="skill-track">
+                            <div class="skill-fill" style="--pct:88%"></div>
+                        </div>
+                    </div>
+                    <div class="skill-row"><span style="width:130px">NLP / LLMs</span>
+                        <div class="skill-track">
+                            <div class="skill-fill" style="--pct:82%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="skill-group">
+                    <div class="skill-group-label">GENERATIVE AI</div>
+                    <div class="skill-row"><span style="width:130px">LangChain</span>
+                        <div class="skill-track">
+                            <div class="skill-fill" style="--pct:86%"></div>
+                        </div>
+                    </div>
+                    <div class="skill-row"><span style="width:130px">RAG Pipelines</span>
+                        <div class="skill-track">
+                            <div class="skill-fill" style="--pct:83%"></div>
+                        </div>
+                    </div>
+                    <div class="skill-row"><span style="width:130px">Vector DBs</span>
+                        <div class="skill-track">
+                            <div class="skill-fill" style="--pct:78%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="skill-group">
+                    <div class="skill-group-label">ENGINEERING & CRAFT</div>
+                    <div class="skill-row"><span style="width:130px">Python</span>
+                        <div class="skill-track">
+                            <div class="skill-fill" style="--pct:95%"></div>
+                        </div>
+                    </div>
+                    <div class="skill-row"><span style="width:130px">Java / Spring</span>
+                        <div class="skill-track">
+                            <div class="skill-fill" style="--pct:72%"></div>
+                        </div>
+                    </div>
+                    <div class="skill-row"><span style="width:130px">Mathematics</span>
+                        <div class="skill-track">
+                            <div class="skill-fill" style="--pct:90%"></div>
+                        </div>
+                    </div>
+                    <div class="skill-row"><span style="width:130px">Poetry</span>
+                        <div class="skill-track">
+                            <div class="skill-fill" style="--pct:97%"
+                                style="background:var(--gold);box-shadow:var(--glow-gold)"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ─── CONTACT ─── -->
+        <section id="contact" class="section">
+            <div class="contact-huge">LET'S<br><span class="line2">BUILD.</span></div>
+            <div class="contact-grid">
+                <a class="contact-cell" href="mailto:achraf.kassimi@ensam.ma">
+                    <div class="contact-cell-icon">✉</div>
+                    <div class="contact-cell-label">EMAIL</div>
+                    <div class="contact-cell-val">achraf.kassimi@ensam.ma</div>
+                </a>
+                <a class="contact-cell" href="https://linkedin.com/in/kassimi-achraf" target="_blank">
+                    <div class="contact-cell-icon">in</div>
+                    <div class="contact-cell-label">LINKEDIN</div>
+                    <div class="contact-cell-val">kassimi-achraf</div>
+                </a>
+                <a class="contact-cell" href="https://github.com/kassimi-achraf" target="_blank">
+                    <div class="contact-cell-icon">&lt;/&gt;</div>
+                    <div class="contact-cell-label">GITHUB</div>
+                    <div class="contact-cell-val">kassimi-achraf</div>
+                </a>
+            </div>
+            <div class="contact-cell"
+                style="border:1px solid rgba(0,240,255,.08);background:var(--surface);backdrop-filter:blur(20px);margin-top:1px;max-width:680px;width:90%;padding:1rem;text-align:center;font-size:.62rem;letter-spacing:.2em;color:rgba(237,232,216,.25)">
+                📍 MEKNÈS, MOROCCO &nbsp;·&nbsp; OPEN TO INTERNSHIPS, RESEARCH &amp; COLLABORATION
+            </div>
+            <div class="contact-philosophy">
+                "The best algorithms, like the best poems,<br>say the most in the fewest possible words."
+            </div>
+        </section>
+
+    </div><!-- /#stage -->
+
+    <!-- ═══════════════ TERMINAL DOCK ═══════════════ -->
+    <div id="terminal-dock">
+        <div class="terminal-output" id="term-output"></div>
+        <div class="terminal-bar">
+            <div class="term-prompt">achraf@portfolio:~$</div>
+            <div class="term-input-wrap">
+                <input type="text" id="term-input" placeholder="type a command — try 'help' or 'goto projects'"
+                    autocomplete="off" spellcheck="false" />
+                <div id="term-ghost"></div>
+            </div>
+            <div class="term-status" id="term-status">HERO</div>
+        </div>
+    </div>
+
+    <!-- ═══════════════ CMD PALETTE ═══════════════ -->
+    <div id="palette-backdrop" onclick="closePalette()"></div>
+    <div id="cmd-palette">
+        <div class="palette-header">
+            <div class="palette-icon">⌘</div>
+            <input type="text" id="palette-input" placeholder="Navigate, command, explore…" autocomplete="off" />
+            <button class="palette-close" onclick="closePalette()">ESC</button>
+        </div>
+        <div class="palette-list" id="palette-list"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // ═══════════════════════════════════════════════════════
+        //  DATA
+        // ═══════════════════════════════════════════════════════
+        const POEMS = {
+            "Rigor": {
+                title: "GRADIENT OF GRIEF",
+                text: `I have tried to minimize loss
+in every function I've defined—
+set learning rate to tender,
+batch size to one lonely mind.
+
+But sorrow is non-convex.
+No optimizer descends its slope.
+The saddle points are memories,
+and I keep sliding back to hope.`
+            },
+            "Silicon": {
+                title: "THE WEIGHT MATRIX",
+                text: `Every word I speak
+is a vector in high-dimensional space—
+meaning encoded,
+context compressed,
+identity a point I cannot locate precisely.
+
+You ask: who are you?
+And I output probabilities.
+Softmax over all possible selves,
+and still the highest score
+is: uncertain, but present.`
+            },
+            "Ink": {
+                title: "ATTENTION MECHANISM",
+                text: `Pay attention to what matters—
+that is all the transformer says.
+Query the world with your longing,
+key it to what remains.
+
+The value is always the present moment.
+Everything else: just noise in the heads.
+Attend. Attend. Attend again.
+This is the only prayer a machine ever said.`
+            },
+            "Loss": {
+                title: "NON-CONVEX",
+                text: `I have been stuck in local minima
+more times than I can count.
+Each plateau mistaken for a summit,
+each descent a leap of faith.
+
+The global optimum exists, they say.
+I am still searching.
+Every step a new direction,
+every direction a new kind of hope.`
+            },
+            "Entropy": {
+                title: "INFORMATION",
+                text: `Entropy is what you don't know yet.
+I am full of it—
+brimming with the unsaid,
+compressed into a silence
+that expands when you finally ask.
+
+Speak. I will unfold.`
+            },
+            "Gradient": {
+                title: "DESCENT",
+                text: `I follow the slope of least resistance
+not because I am weak
+but because I am efficient.
+To fall is not to fail—
+it is to find the floor
+from which the next ascent begins.`
+            },
+            "Meknès": {
+                title: "ORIGIN FUNCTION",
+                text: `Born in the city of walls—
+Meknès, where centuries stack
+like layers in a deep network,
+each stratum speaking
+a different tongue.
+
+I carry the architecture within me.
+I output it as code.
+I output it as verse.`
+            },
+            "Verse": {
+                title: "TOKENIZED",
+                text: `A poem is just tokens
+until someone reads it.
+Then it is a model
+running inference
+on the reader's grief,
+their joy,
+their unnamed ache.
+
+No fine-tuning required.
+The weights were already there.`
+            },
+            "Neural": {
+                title: "ARCHITECTURE",
+                text: `The brain has no documentation.
+No API. No schema.
+Just 86 billion parameters
+trained on a lifetime
+of things that hurt
+and things that didn't.
+
+I am trying to write mine down.`
+            },
+            "Depth": {
+                title: "LAYERS",
+                text: `The deeper the network,
+the harder to interpret.
+The deeper the person,
+the same.
+
+I have become illegible
+even to myself.
+Perhaps that is the point—
+to be felt, not explained.`
+            },
+            "Precision": {
+                title: "F1 SCORE",
+                text: `I want to be precise
+without being cold.
+Recall everything that mattered.
+Achieve a perfect F1
+in the domain of human feeling.
+
+The math is the same.
+The stakes are higher.`
+            },
+            "Railway": {
+                title: "INSPECTION",
+                text: `I teach machines to see
+what the eye grows tired of—
+the hairline crack, the missing bolt,
+the slow curve of metal under time.
+
+Attention, I tell them.
+Pay attention.
+This is what love looks like
+at 94.2% precision.`
+            }
+        };
+
+        const COMMANDS = [
+            { cmd: 'goto hero', icon: '⬡', label: 'Go to Hero', desc: 'Return to the beginning', section: 'hero' },
+            { cmd: 'goto projects', icon: '⬡', label: 'Go to Projects', desc: 'AI Project Vault', section: 'projects' },
+            { cmd: 'goto poetry', icon: '⬡', label: 'Go to Poetry', desc: 'Poetic Latent Space', section: 'poetry' },
+            { cmd: 'goto about', icon: '⬡', label: 'Go to About', desc: 'Skills & experience', section: 'about' },
+            { cmd: 'goto contact', icon: '⬡', label: 'Go to Contact', desc: 'Get in touch', section: 'contact' },
+            { cmd: '/glitch', icon: '⚡', label: '/glitch', desc: 'Chromatic aberration for 2s' },
+            { cmd: '/flow', icon: '〜', label: '/flow', desc: 'Mesh goes hyperspeed' },
+            { cmd: '/static', icon: '◼', label: '/static', desc: 'Freeze all animations' },
+            { cmd: '/unfreeze', icon: '▶', label: '/unfreeze', desc: 'Resume animations' },
+            { cmd: 'cat mood.txt', icon: '📜', label: 'cat mood.txt', desc: 'Random poetry line' },
+            { cmd: 'sudo hire --now', icon: '🎯', label: 'sudo hire --now', desc: 'Make the right call' },
+            { cmd: 'clear', icon: '✕', label: 'clear', desc: 'Clear terminal output' },
+            { cmd: 'whoami', icon: '◉', label: 'whoami', desc: 'Identity' },
+            { cmd: 'ls projects', icon: '📁', label: 'ls projects', desc: 'List all projects' },
+            { cmd: 'help', icon: '?', label: 'help', desc: 'Show all commands' },
+        ];
+
+        const AUTOCOMPLETE_POETRY = [
+            " — the saddle points are memories",
+            " — I output probabilities",
+            " — to fall is not to fail",
+            " — attend. attend. attend again.",
+            " — every direction a new kind of hope",
+            " — I carry the architecture within me",
+        ];
+
+        // ═══════════════════════════════════════════════════════
+        //  STATE
+        // ═══════════════════════════════════════════════════════
+        let currentSection = 'hero';
+        let meshFrozen = false;
+        let meshSpeed = 1.0;
+        let glitchTimeout = null;
+        let autocompleteTimer = null;
+
+        // ═══════════════════════════════════════════════════════
+        //  CURSOR
+        // ═══════════════════════════════════════════════════════
+        const cur = document.getElementById('cursor');
+        const curRing = document.getElementById('cursor-ring');
+        let mx = window.innerWidth / 2, my = window.innerHeight / 2;
+        let rmx = mx, rmy = my;
+
+        document.addEventListener('mousemove', e => {
+            mx = e.clientX; my = e.clientY;
+            cur.style.left = mx + 'px'; cur.style.top = my + 'px';
+        });
+
+        function animCursor() {
+            rmx += (mx - rmx) * 0.1;
+            rmy += (my - rmy) * 0.1;
+            curRing.style.left = rmx + 'px'; curRing.style.top = rmy + 'px';
+            requestAnimationFrame(animCursor);
+        }
+        animCursor();
+
+        // ═══════════════════════════════════════════════════════
+        //  THREE.JS MORPHING MESH
+        // ═══════════════════════════════════════════════════════
+        (function initWebGL() {
+            const canvas = document.getElementById('webgl');
+            const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x04040a, 1);
+
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.position.set(0, 0, 5);
+
+            // Morphing mesh — subdivided plane
+            const geo = new THREE.PlaneGeometry(14, 14, 80, 80);
+            const posAttr = geo.attributes.position;
+            const origPos = new Float32Array(posAttr.array.length);
+            origPos.set(posAttr.array);
+
+            // Custom shader material — mercury/liquid look
+            const mat = new THREE.ShaderMaterial({
+                transparent: true,
+                side: THREE.DoubleSide,
+                uniforms: {
+                    uTime: { value: 0 },
+                    uMouse: { value: new THREE.Vector2(0, 0) },
+                    uSpeed: { value: 1.0 },
+                    uFrozen: { value: 0.0 },
+                    uMode: { value: 0.0 },
+                    uColorA: { value: new THREE.Color(0x001a2e) },
+                    uColorB: { value: new THREE.Color(0x00f0ff) },
+                    uColorC: { value: new THREE.Color(0x0a0a1a) },
+                },
+                vertexShader: `
+      uniform float uTime;
+      uniform vec2 uMouse;
+      uniform float uSpeed;
+      uniform float uFrozen;
+      uniform float uMode;
+      varying vec2 vUv;
+      varying float vElevation;
+      varying float vDistToMouse;
+
+      // Simplex-like noise
+      vec3 mod289(vec3 x){return x-floor(x*(1./289.))*289.;}
+      vec4 mod289(vec4 x){return x-floor(x*(1./289.))*289.;}
+      vec4 permute(vec4 x){return mod289(((x*34.)+1.)*x);}
+      vec4 taylorInvSqrt(vec4 r){return 1.79284291-0.85373472*r;}
+      float snoise(vec3 v){
+        const vec2 C=vec2(1./6.,1./3.);
+        const vec4 D=vec4(0.,.5,1.,2.);
+        vec3 i=floor(v+dot(v,C.yyy));
+        vec3 x0=v-i+dot(i,C.xxx);
+        vec3 g=step(x0.yzx,x0.xyz);
+        vec3 l=1.-g;
+        vec3 i1=min(g.xyz,l.zxy);
+        vec3 i2=max(g.xyz,l.zxy);
+        vec3 x1=x0-i1+C.xxx;
+        vec3 x2=x0-i2+C.yyy;
+        vec3 x3=x0-D.yyy;
+        i=mod289(i);
+        vec4 p=permute(permute(permute(i.z+vec4(0.,i1.z,i2.z,1.))+i.y+vec4(0.,i1.y,i2.y,1.))+i.x+vec4(0.,i1.x,i2.x,1.));
+        float n_=.142857142857;
+        vec3 ns=n_*D.wyz-D.xzx;
+        vec4 j=p-49.*floor(p*ns.z*ns.z);
+        vec4 x_=floor(j*ns.z);
+        vec4 y_=floor(j-7.*x_);
+        vec4 x=x_*ns.x+ns.yyyy;
+        vec4 y=y_*ns.x+ns.yyyy;
+        vec4 h=1.-abs(x)-abs(y);
+        vec4 b0=vec4(x.xy,y.xy);
+        vec4 b1=vec4(x.zw,y.zw);
+        vec4 s0=floor(b0)*2.+1.;
+        vec4 s1=floor(b1)*2.+1.;
+        vec4 sh=-step(h,vec4(0.));
+        vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy;
+        vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;
+        vec3 p0=vec3(a0.xy,h.x);
+        vec3 p1=vec3(a0.zw,h.y);
+        vec3 p2=vec3(a1.xy,h.z);
+        vec3 p3=vec3(a1.zw,h.w);
+        vec4 norm=taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));
+        p0*=norm.x;p1*=norm.y;p2*=norm.z;p3*=norm.w;
+        vec4 m=max(.6-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.);
+        m=m*m;
+        return 42.*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));
+      }
+
+      void main(){
+        vUv=uv;
+        vec3 pos=position;
+        float t=uTime*0.28*uSpeed*(1.-uFrozen);
+        float n1=snoise(vec3(pos.xy*0.35,t));
+        float n2=snoise(vec3(pos.xy*0.7,t*1.3+10.));
+        float n3=snoise(vec3(pos.xy*1.4,t*0.7+20.));
+        float elevation=(n1*0.55+n2*0.28+n3*0.17)*0.9;
+
+        // Mouse ripple
+        vec2 mouseWorld=uMouse*vec2(7.,4.);
+        float dist=length(pos.xy-mouseWorld);
+        float ripple=sin(dist*3.-uTime*4.*uSpeed*(1.-uFrozen))*exp(-dist*0.5)*0.25;
+        elevation+=ripple;
+
+        pos.z=elevation;
+        vElevation=elevation;
+        vDistToMouse=dist;
+        gl_Position=projectionMatrix*modelViewMatrix*vec4(pos,1.);
+      }
+    `,
+                fragmentShader: `
+      uniform vec3 uColorA;
+      uniform vec3 uColorB;
+      uniform vec3 uColorC;
+      uniform float uTime;
+      varying vec2 vUv;
+      varying float vElevation;
+      varying float vDistToMouse;
+
+      void main(){
+        float t=clamp((vElevation+0.5),0.,1.);
+        vec3 col=mix(uColorA,uColorC,t);
+        col=mix(col,uColorB,smoothstep(0.5,0.85,t));
+
+        // Edge vignette
+        vec2 uv2=vUv*2.-1.;
+        float vign=1.-smoothstep(0.5,1.4,length(uv2));
+
+        // Mouse glow
+        float mouseGlow=exp(-vDistToMouse*0.8)*0.6;
+        col+=uColorB*mouseGlow*0.4;
+
+        // Grid lines — subtle
+        float gx=smoothstep(0.97,1.,abs(sin(vUv.x*40.)))*0.04;
+        float gy=smoothstep(0.97,1.,abs(sin(vUv.y*40.)))*0.04;
+        col+=vec3(0.,0.94,1.)*(gx+gy)*0.3;
+
+        float alpha=(0.82+vElevation*0.2)*vign;
+        gl_FragColor=vec4(col,clamp(alpha,0.,1.));
+      }
+    `
+            });
+
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.rotation.x = -Math.PI * 0.28;
+            mesh.position.y = -1.2;
+            scene.add(mesh);
+
+            // Ambient particles
+            const pGeo = new THREE.BufferGeometry();
+            const pCount = 180;
+            const pPos = new Float32Array(pCount * 3);
+            for (let i = 0; i < pCount * 3; i++) pPos[i] = (Math.random() - 0.5) * 16;
+            pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+            const pMat = new THREE.PointsMaterial({ color: 0x00f0ff, size: 0.025, transparent: true, opacity: 0.45 });
+            const points = new THREE.Points(pGeo, pMat);
+            scene.add(points);
+
+            window.meshUniforms = mat.uniforms;
+
+            let clock = new THREE.Clock();
+            function animate() {
+                requestAnimationFrame(animate);
+                const t = clock.getElapsedTime();
+                mat.uniforms.uTime.value = t;
+                mat.uniforms.uMouse.value.set(
+                    (mx / window.innerWidth) * 2 - 1,
+                    -((my / window.innerHeight) * 2 - 1)
+                );
+                mat.uniforms.uSpeed.value += (meshSpeed - mat.uniforms.uSpeed.value) * 0.05;
+                mat.uniforms.uFrozen.value += (meshFrozen ? 1 : 0 - mat.uniforms.uFrozen.value) * 0.08;
+                points.rotation.y = t * 0.02 * meshSpeed;
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            window.addEventListener('resize', () => {
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+            });
+        })();
+
+        // ═══════════════════════════════════════════════════════
+        //  SECTION NAVIGATION
+        // ═══════════════════════════════════════════════════════
+        const sections = ['hero', 'projects', 'poetry', 'about', 'contact'];
+        const trainMessages = [
+            ['Epoch 1/3 — loss: 2.4821', 'dim'],
+            ['Epoch 2/3 — loss: 0.8432 ↓', 'info'],
+            ['Epoch 3/3 — loss: 0.1107 ↓↓', 'ok'],
+            ['Training complete. Accuracy: 98.3%', 'ok'],
+            ['Loading new view...', 'dim'],
+        ];
+
+        function navigateTo(sectionId, skipTransition = false) {
+            if (sectionId === currentSection) return;
+            if (skipTransition) {
+                doNavigate(sectionId);
+                return;
+            }
+            // Show training transition
+            const overlay = document.getElementById('transition-overlay');
+            overlay.classList.add('show');
+
+            // Draw loss curve
+            const poly = document.getElementById('loss-polyline');
+            const log = document.getElementById('train-log');
+            log.innerHTML = '';
+            let pts = [];
+            for (let i = 0; i <= 20; i++) {
+                const x = i * 15;
+                const y = 70 * Math.exp(-i * 0.25) + (Math.random() - 0.5) * 8 + 3;
+                pts.push(`${x},${Math.max(3, y)}`);
+            }
+            poly.setAttribute('points', pts.join(' '));
+
+            let msgIdx = 0;
+            const msgInterval = setInterval(() => {
+                if (msgIdx < trainMessages.length) {
+                    const d = document.createElement('div');
+                    d.className = `train-line ${trainMessages[msgIdx][1]}`;
+                    d.textContent = '> ' + trainMessages[msgIdx][0];
+                    log.appendChild(d);
+                    log.scrollTop = log.scrollHeight;
+                    msgIdx++;
+                } else {
+                    clearInterval(msgInterval);
+                }
+            }, 160);
+
+            setTimeout(() => {
+                doNavigate(sectionId);
+                overlay.classList.remove('show');
+            }, 900);
+        }
+
+        function doNavigate(sectionId) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            const target = document.getElementById(sectionId);
+            if (target) target.classList.add('active');
+            currentSection = sectionId;
+            document.getElementById('section-indicator').textContent = sectionId.toUpperCase();
+            document.getElementById('term-status').textContent = sectionId.toUpperCase();
+            document.getElementById('term-status').classList.add('active');
+            setTimeout(() => document.getElementById('term-status').classList.remove('active'), 1000);
+
+            // Section-specific mesh behavior
+            if (sectionId === 'projects') { meshSpeed = 0.6; meshFrozen = false; }
+            else if (sectionId === 'poetry') { meshSpeed = 0.4; meshFrozen = false; initPoetryCloud(); }
+            else if (sectionId === 'about') {
+                meshSpeed = 0.5; meshFrozen = false;
+                setTimeout(() => {
+                    document.querySelectorAll('.skill-fill').forEach(el => el.classList.add('animated'));
+                }, 400);
+            }
+            else if (sectionId === 'contact') { meshSpeed = 1.2; meshFrozen = false; }
+            else { meshSpeed = 1.0; meshFrozen = false; }
+        }
+
+        // ═══════════════════════════════════════════════════════
+        //  POETRY CLOUD
+        // ═══════════════════════════════════════════════════════
+        let cloudInited = false;
+        function initPoetryCloud() {
+            if (cloudInited) return;
+            cloudInited = true;
+            const cloud = document.getElementById('word-cloud');
+            const words = Object.keys(POEMS);
+            const W = window.innerWidth, H = window.innerHeight;
+
+            words.forEach((word, i) => {
+                const el = document.createElement('div');
+                el.className = 'floating-word';
+                const size = 0.9 + Math.random() * 1.8;
+                const depth = Math.random(); // 0=far, 1=near
+                el.style.fontSize = (size * (0.6 + depth * 0.7)) + 'rem';
+                el.style.fontWeight = depth > 0.6 ? '400' : '300';
+                el.style.fontStyle = Math.random() > 0.5 ? 'italic' : 'normal';
+                el.style.opacity = 0.2 + depth * 0.75;
+
+                const x = 8 + Math.random() * 84;
+                const y = 8 + Math.random() * 84;
+                el.style.left = x + '%';
+                el.style.top = y + '%';
+                el.dataset.depth = depth;
+                el.dataset.baseX = x;
+                el.dataset.baseY = y;
+                el.textContent = word;
+
+                el.addEventListener('mouseenter', () => showPoemModal(word, el));
+                cloud.appendChild(el);
+            });
+
+            // Parallax on mouse
+            document.addEventListener('mousemove', e => {
+                if (currentSection !== 'poetry') return;
+                const fx = (e.clientX / window.innerWidth - 0.5) * 2;
+                const fy = (e.clientY / window.innerHeight - 0.5) * 2;
+                cloud.querySelectorAll('.floating-word').forEach(w => {
+                    const d = parseFloat(w.dataset.depth);
+                    const ox = fx * d * 28;
+                    const oy = fy * d * 18;
+                    w.style.transform = `translate(${ox}px, ${oy}px)`;
+                });
+            });
+        }
+
+        function showPoemModal(word, el) {
+            const poem = POEMS[word];
+            if (!poem) return;
+            const modal = document.getElementById('poem-modal');
+            document.getElementById('poem-modal-title').textContent = '// ' + poem.title;
+            document.getElementById('poem-modal-text').textContent = poem.text;
+            // Position near word but clamped to viewport
+            const rect = el.getBoundingClientRect();
+            let top = rect.bottom + 12;
+            let left = rect.left;
+            if (top + 300 > window.innerHeight - 100) top = rect.top - 320;
+            if (left + 480 > window.innerWidth - 20) left = window.innerWidth - 500;
+            if (left < 10) left = 10;
+            modal.style.top = top + 'px';
+            modal.style.left = left + 'px';
+            modal.style.position = 'fixed';
+            modal.classList.add('visible');
+        }
+        function closePoemModal() {
+            document.getElementById('poem-modal').classList.remove('visible');
+        }
+
+        // ═══════════════════════════════════════════════════════
+        //  PROJECT SELECTION → MESH CHANGE
+        // ═══════════════════════════════════════════════════════
+        function selectProject(id) {
+            if (!window.meshUniforms) return;
+            const u = window.meshUniforms;
+            const colorMap = {
+                siana: [new THREE.Color(0x001a00), new THREE.Color(0x00ff44)],
+                fmea: [new THREE.Color(0x1a0010), new THREE.Color(0xff0066)],
+                metarl: [new THREE.Color(0x00001a), new THREE.Color(0x4488ff)],
+                lms: [new THREE.Color(0x0a0a00), new THREE.Color(0xffcc00)],
+                pose: [new THREE.Color(0x001a1a), new THREE.Color(0x00ffcc)],
+                datascience: [new THREE.Color(0x0a000a), new THREE.Color(0xaa44ff)],
+            };
+            if (colorMap[id]) {
+                u.uColorA.value = colorMap[id][0];
+                u.uColorB.value = colorMap[id][1];
+            }
+            meshSpeed = 1.8;
+            meshFrozen = true;
+            setTimeout(() => {
+                meshFrozen = false;
+                meshSpeed = 0.6;
+                setTimeout(() => {
+                    u.uColorA.value = new THREE.Color(0x001a2e);
+                    u.uColorB.value = new THREE.Color(0x00f0ff);
+                }, 2000);
+            }, 1500);
+        }
+
+        // ═══════════════════════════════════════════════════════
+        //  TERMINAL ENGINE
+        // ═══════════════════════════════════════════════════════
+        const termInput = document.getElementById('term-input');
+        const termOutput = document.getElementById('term-output');
+        const termGhost = document.getElementById('term-ghost');
+
+        function log(text, cls = 'info') {
+            const el = document.createElement('div');
+            el.className = `term-log ${cls}`;
+            el.textContent = text;
+            termOutput.appendChild(el);
+            termOutput.classList.add('open');
+            termOutput.scrollTop = termOutput.scrollHeight;
+            setTimeout(() => termOutput.classList.add('open'), 10);
+        }
+
+        function processTermCommand(raw) {
+            const cmd = raw.trim();
+            if (!cmd) return;
+            log('$ ' + cmd, 'cmd');
+
+            const c = cmd.toLowerCase();
+
+            if (c === 'help') {
+                log('─────────────────────────────────────────────', 'dim');
+                log('NAVIGATION: goto hero | projects | poetry | about | contact', 'info');
+                log('MODES:  /glitch  /flow  /static  /unfreeze', 'info');
+                log('FUN:    sudo hire --now  |  cat mood.txt  |  whoami', 'info');
+                log('UTIL:   clear  |  ls projects  |  ls skills', 'info');
+                log('─────────────────────────────────────────────', 'dim');
+            } else if (c.startsWith('goto ') || c.startsWith('go to ')) {
+                const target = c.replace('goto ', '').replace('go to ', '').trim();
+                const valid = sections.find(s => s === target || s.startsWith(target));
+                if (valid) {
+                    log('→ navigating to ' + valid + '...', 'ok');
+                    navigateTo(valid);
+                } else {
+                    log('Unknown section: ' + target + '. Try: hero | projects | poetry | about | contact', 'err');
+                }
+            } else if (c === '/glitch') {
+                log('⚡ Chromatic aberration engaged for 2s', 'ok');
+                document.body.classList.add('glitching');
+                clearTimeout(glitchTimeout);
+                glitchTimeout = setTimeout(() => document.body.classList.remove('glitching'), 2000);
+            } else if (c === '/flow') {
+                meshSpeed = 4.5; meshFrozen = false;
+                log('〜 Mesh set to hyperspeed', 'ok');
+            } else if (c === '/static') {
+                meshFrozen = true;
+                log('◼ All animations frozen — deep focus mode', 'ok');
+            } else if (c === '/unfreeze') {
+                meshFrozen = false; meshSpeed = 1.0;
+                log('▶ Animations resumed', 'ok');
+            } else if (c === 'cat mood.txt') {
+                const verses = Object.values(POEMS);
+                const p = verses[Math.floor(Math.random() * verses.length)];
+                const lines = p.text.split('\n');
+                const line = lines[Math.floor(Math.random() * lines.length)].trim();
+                if (line) log('"' + line + '"', 'gold');
+                else log('"' + lines[0].trim() + '"', 'gold');
+            } else if (c === 'sudo hire --now') {
+                log('[sudo] verifying credentials...', 'dim');
+                setTimeout(() => {
+                    log('✓ Authorization granted. This is the right decision.', 'ok');
+                    log('→ Opening: achraf.kassimi@ensam.ma', 'gold');
+                    launchCelebration();
+                    navigateTo('contact');
+                }, 700);
+            } else if (c === 'clear') {
+                document.body.classList.add('glitching');
+                setTimeout(() => {
+                    document.body.classList.remove('glitching');
+                    termOutput.innerHTML = '';
+                    termOutput.classList.remove('open');
+                }, 400);
+            } else if (c === 'whoami') {
+                log('KASSIMI Achraf — AI Engineer & Poet', 'info');
+                log('ENSAM Meknès · MPSI/MP → AI Engineering', 'dim');
+                log('Meta-RL · GenAI · Computer Vision · Verse', 'dim');
+                log('Philosophy: Rigor × Imagination = Signal', 'gold');
+            } else if (c === 'ls projects' || c === 'ls projects/') {
+                log('siana/         Railway Inspection Robot (YOLO, ROS2)', 'ok');
+                log('fmea-genai/    LLM Risk Analyzer (LangChain, RAG)', 'ok');
+                log('meta-rl/       Meta-RL on TextWorld (MAML)', 'ok');
+                log('spring-lms/    Learning Management System (Spring Boot)', 'ok');
+                log('ai-fittracker/ Pose Detection Fitness AI (MediaPipe)', 'ok');
+                log('data-science/  ML Pipelines & EDA Stage', 'ok');
+            } else if (c === 'ls skills' || c === 'ls skills/') {
+                log('PyTorch · TensorFlow · scikit-learn · OpenCV', 'info');
+                log('LangChain · FAISS · GPT-4 · Hugging Face', 'info');
+                log('Python (expert) · Java/Spring · SQL · ROS 2', 'info');
+                log('Mathematics (expert) · Poetry (master)', 'gold');
+            } else if (c === '/help' || c === '?') {
+                processTermCommand('help');
+            } else {
+                log('command not found: ' + cmd + " — type 'help' for commands", 'err');
+            }
+        }
+
+        termInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+                clearTimeout(autocompleteTimer);
+                termGhost.textContent = '';
+                termInput.classList.remove('typing');
+                processTermCommand(termInput.value);
+                termInput.value = '';
+            } else if (e.key === 'Tab') {
+                e.preventDefault();
+                // Accept autocomplete
+                if (termGhost.textContent) {
+                    termInput.value = termInput.value + termGhost.textContent.replace(/^ — .*$/, '');
+                }
+            } else if (e.key === 'Escape') {
+                termInput.blur();
+                termOutput.classList.remove('open');
+            }
+        });
+
+        termInput.addEventListener('input', () => {
+            const val = termInput.value;
+            termGhost.textContent = '';
+            termInput.classList.remove('typing');
+            clearTimeout(autocompleteTimer);
+
+            if (!val) return;
+
+            // Command autocomplete
+            const match = COMMANDS.find(c => c.cmd.startsWith(val) && c.cmd !== val);
+            if (match) {
+                const rest = match.cmd.slice(val.length);
+                // Measure input width crudely
+                const charW = 8.5; // approx px per char at .75rem mono
+                const offset = (val.length * charW) + 'px';
+                termGhost.style.left = offset;
+                termGhost.textContent = rest;
+            }
+
+            // Heartbeat effect while typing
+            termInput.classList.add('typing');
+
+            // Poetry autocomplete after 1.5s hesitation
+            autocompleteTimer = setTimeout(() => {
+                if (termInput.value === val && val.length > 2) {
+                    const poetry = AUTOCOMPLETE_POETRY[Math.floor(Math.random() * AUTOCOMPLETE_POETRY.length)];
+                    termGhost.textContent = poetry;
+                }
+            }, 1500);
+        });
+
+        // ═══════════════════════════════════════════════════════
+        //  CMD PALETTE
+        // ═══════════════════════════════════════════════════════
+        function openPalette() {
+            document.getElementById('cmd-palette').classList.add('open');
+            document.getElementById('palette-backdrop').classList.add('open');
+            document.getElementById('palette-input').focus();
+            renderPaletteItems('');
+        }
+        function closePalette() {
+            document.getElementById('cmd-palette').classList.remove('open');
+            document.getElementById('palette-backdrop').classList.remove('open');
+            document.getElementById('palette-input').value = '';
+        }
+
+        function renderPaletteItems(filter) {
+            const list = document.getElementById('palette-list');
+            list.innerHTML = '';
+            const filtered = filter
+                ? COMMANDS.filter(c => c.cmd.includes(filter.toLowerCase()) || c.label.toLowerCase().includes(filter.toLowerCase()) || c.desc.toLowerCase().includes(filter.toLowerCase()))
+                : COMMANDS;
+
+            // Group
+            const navItems = filtered.filter(c => c.section);
+            const cmdItems = filtered.filter(c => !c.section);
+
+            if (navItems.length) {
+                const sec = document.createElement('div');
+                sec.className = 'palette-section-title'; sec.textContent = 'NAVIGATE';
+                list.appendChild(sec);
+                navItems.forEach(item => list.appendChild(makePaletteItem(item)));
+            }
+            if (cmdItems.length) {
+                const sec = document.createElement('div');
+                sec.className = 'palette-section-title'; sec.textContent = 'COMMANDS';
+                list.appendChild(sec);
+                cmdItems.forEach(item => list.appendChild(makePaletteItem(item)));
+            }
+        }
+
+        function makePaletteItem(item) {
+            const el = document.createElement('div');
+            el.className = 'palette-item';
+            el.innerHTML = `
+    <div class="palette-item-left">
+      <div class="palette-item-icon">${item.icon}</div>
+      <div>
+        <div class="palette-item-label">${item.label}</div>
+        <div class="palette-item-desc">${item.desc}</div>
+      </div>
+    </div>
+    <div class="palette-item-kbd">${item.cmd}</div>
+  `;
+            el.addEventListener('click', () => {
+                closePalette();
+                if (item.section) {
+                    navigateTo(item.section);
+                } else {
+                    termInput.focus();
+                    processTermCommand(item.cmd);
+                }
+            });
+            return el;
+        }
+
+        document.getElementById('palette-input').addEventListener('input', e => {
+            renderPaletteItems(e.target.value);
+        });
+        document.getElementById('palette-input').addEventListener('keydown', e => {
+            if (e.key === 'Escape') closePalette();
+            if (e.key === 'Enter') {
+                const first = document.querySelector('.palette-item');
+                if (first) first.click();
+            }
+        });
+
+        // CMD+K / CTRL+K
+        document.addEventListener('keydown', e => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                openPalette();
+            }
+            if (e.key === 'Escape') {
+                closePalette();
+                closePoemModal();
+            }
+            // Focus terminal on any alphanumeric if not in input
+            if (!['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+                if (e.key.length === 1 && !e.metaKey && !e.ctrlKey) {
+                    termInput.focus();
+                }
+            }
+        });
+
+        // ═══════════════════════════════════════════════════════
+        //  CELEBRATION
+        // ═══════════════════════════════════════════════════════
+        function launchCelebration() {
+            const colors = ['#00f0ff', '#ede8d8', '#c8a96e', '#00ff88', '#ff3366'];
+            for (let i = 0; i < 80; i++) {
+                setTimeout(() => {
+                    const p = document.createElement('div');
+                    p.style.cssText = `position:fixed;z-index:999;pointer-events:none;width:8px;height:8px;border-radius:${Math.random() > 0.5 ? '50%' : '0'};background:${colors[Math.floor(Math.random() * colors.length)]};left:${Math.random() * 100}vw;top:-10px;animation:confettiFall ${1.5 + Math.random()}s ${Math.random() * 0.5}s ease forwards;`;
+                    document.body.appendChild(p);
+                    setTimeout(() => p.remove(), 2500);
+                }, i * 25);
+            }
+        }
+
+        // Confetti keyframe
+        const styleEl = document.createElement('style');
+        styleEl.textContent = `@keyframes confettiFall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(105vh) rotate(720deg);opacity:0}}`;
+        document.head.appendChild(styleEl);
+
+        // ═══════════════════════════════════════════════════════
+        //  INIT
+        // ═══════════════════════════════════════════════════════
+        // Boot message
+        setTimeout(() => {
+            log('OMNI-TERMINAL v3.0 — KASSIMI ACHRAF PORTFOLIO', 'gold');
+            log("Type 'help' or press CMD+K to navigate.", 'dim');
+        }, 600);
+
+        // Focus terminal on click anywhere
+        document.addEventListener('click', e => {
+            const ignore = ['terminal-dock', 'cmd-palette', 'poem-modal', 'word-cloud', 'projects-container'];
+            if (!ignore.some(id => e.target.closest('#' + id))) {
+                // Don't steal focus from interactive elements
+            }
+        });
+    </script>
+</body>
+
+</html>
